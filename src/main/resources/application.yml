@@ -1,0 +1,68 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+jwt:
+  auth:
+    converter:
+      resource-id: buyit-client
+      principal-attribute: preferred_username
+
+keycloak:
+  server-url: http://localhost:9080
+  client-id: ${jwt.auth.converter.resource-id}
+  realm:
+    name: buyit
+    master-realm: master
+  admin:
+    cli: admin-cli
+    user-console: admin
+    password-console: admin
+    secret: XXrvGTh9XXd8YyYzfWWLheRxK9GNu2Ha
+
+logging:
+  level:
+    org.hibernate.SQL: #debug  # Logs SQL queries for debugging
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 20MB
+      enabled: on
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce_db
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:9080/realms/buyit
+          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
+
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
+  application:
+    name: BuyIT ecommerce
+  jpa:
+    hibernate:
+      ddl-auto: none  # Use 'validate', 'create', or 'update' depending on your needs
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+        use_sql_comments: false
+        generate_statistics: false
+    open-in-view: false  # Best practice to avoid LazyInitializationException`
+
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
