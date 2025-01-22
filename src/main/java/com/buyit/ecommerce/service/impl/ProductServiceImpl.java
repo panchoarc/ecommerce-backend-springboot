@@ -17,6 +17,7 @@ import com.buyit.ecommerce.mapper.ProductMapper;
 import com.buyit.ecommerce.repository.CategoryRepository;
 import com.buyit.ecommerce.repository.ProductCategoryRepository;
 import com.buyit.ecommerce.repository.ProductRepository;
+import com.buyit.ecommerce.repository.specification.ProductSpecification;
 import com.buyit.ecommerce.service.ProductService;
 import com.buyit.ecommerce.util.ResponseBuilder;
 import jakarta.transaction.Transactional;
@@ -47,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Page<ProductResponse> getAllProducts(ProductRequest productRequest, int page, int size) {
-        Specification<Product> spec = buildSpecification(productRequest);
+        Specification<Product> spec = ProductSpecification.getProductSpecification(productRequest);
         Sort sort = Sort.by(Sort.Direction.ASC, "productId");
 
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -252,39 +253,5 @@ public class ProductServiceImpl implements ProductService {
                 orElseThrow(() -> new ResourceNotFoundException("Product not found"));
     }
 
-
-    private static Specification<Product> buildSpecification(ProductRequest productRequest) {
-        return (root, query, criteriaBuilder) -> {
-            var predicates = criteriaBuilder.conjunction();
-
-            String name = productRequest.getName();
-
-            if (name != null && !name.isEmpty()) {
-                predicates = criteriaBuilder.and(
-                        predicates,
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%")
-                );
-            }
-            String description = productRequest.getDescription();
-
-            if (description != null && !description.isEmpty()) {
-                predicates = criteriaBuilder.and(
-                        predicates,
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), "%" + description.toLowerCase() + "%")
-                );
-            }
-
-            BigDecimal minPrice = productRequest.getPrice();
-
-            if (minPrice != null) {
-                predicates = criteriaBuilder.and(
-                        predicates,
-                        criteriaBuilder.greaterThanOrEqualTo(root.get("price"), minPrice)
-                );
-            }
-
-            return predicates;
-        };
-    }
 
 }
