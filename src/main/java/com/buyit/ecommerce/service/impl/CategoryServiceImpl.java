@@ -12,10 +12,8 @@ import com.buyit.ecommerce.exception.custom.ResourceIllegalState;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
 import com.buyit.ecommerce.mapper.CategoryMapper;
 import com.buyit.ecommerce.repository.CategoryRepository;
+import com.buyit.ecommerce.repository.specification.CategorySpecification;
 import com.buyit.ecommerce.service.CategoryService;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Path;
-import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -25,8 +23,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -39,7 +35,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public Page<CategoryResponse> getAllCategories(CategoryRequest categoryRequest, int page, int size) {
-        Specification<Category> spec = getCategorySpecification(categoryRequest);
+        Specification<Category> spec = CategorySpecification.getCategorySpecification(categoryRequest);
         Sort sort = Sort.by(Sort.Direction.ASC, "categoryId");
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -98,31 +94,5 @@ public class CategoryServiceImpl implements CategoryService {
     private Category getCategory(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No category found with ID: " + id));
-    }
-
-    public Specification<Category> getCategorySpecification(CategoryRequest categoryRequest) {
-        return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            // Agregar predicado para nombre de categoría
-            addLikePredicateIfNotEmpty(predicates, criteriaBuilder, root.get("name"), categoryRequest.getCategoryName());
-
-            // Agregar predicado para isActive
-            addEqualPredicateIfNotNull(predicates, criteriaBuilder, root.get("isActive"), categoryRequest.getIsActive());
-
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-    }
-
-    private void addLikePredicateIfNotEmpty(List<Predicate> predicates, CriteriaBuilder cb, Path<String> path, String value) {
-        if (value != null && !value.trim().isEmpty()) {
-            predicates.add(cb.like(cb.lower(path), "%" + value.trim().toLowerCase() + "%"));
-        }
-    }
-
-    private void addEqualPredicateIfNotNull(List<Predicate> predicates, CriteriaBuilder cb, Path<?> path, Object value) {
-        if (value != null) {
-            predicates.add(cb.equal(path, value));
-        }
     }
 }
