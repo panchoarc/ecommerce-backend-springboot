@@ -4,12 +4,13 @@ import com.buyit.ecommerce.dto.request.endpoint.CreateEndpointRequest;
 import com.buyit.ecommerce.entity.Endpoint;
 import com.buyit.ecommerce.entity.Role;
 import com.buyit.ecommerce.entity.RoleEndpoint;
+import com.buyit.ecommerce.exception.custom.ResourceExistException;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
 import com.buyit.ecommerce.repository.EndpointRepository;
 import com.buyit.ecommerce.repository.RoleEndpointRepository;
 import com.buyit.ecommerce.repository.RoleRepository;
+import com.buyit.ecommerce.service.KeycloakService;
 import com.buyit.ecommerce.service.RoleService;
-import com.buyit.ecommerce.util.KeycloakProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.idm.RoleRepresentation;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RoleServiceImpl implements RoleService {
 
-    private final KeycloakProvider keycloakProvider;
+    private final KeycloakService keycloakService;
     private final RoleRepository roleRepository;
     private final EndpointRepository endpointRepository;
     private final RoleEndpointRepository roleEndpointRepository;
@@ -33,7 +35,7 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public void syncKeycloakRoles() {
 
-        List<RoleRepresentation> roles = keycloakProvider.getClientRoles();
+        List<RoleRepresentation> roles = keycloakService.getClientRoles();
         for (RoleRepresentation role : roles) {
             String roleId = role.getId(); // ID único del rol
             String roleName = role.getName(); // Nombre del rol (puede cambiar)
@@ -43,6 +45,7 @@ public class RoleServiceImpl implements RoleService {
         }
 
     }
+
 
     @Override
     public void assignRolesToEndpoint(Long id, CreateEndpointRequest endpointsIds) {
@@ -55,6 +58,15 @@ public class RoleServiceImpl implements RoleService {
             throw new ResourceNotFoundException("Some endpoints IDs are not valid");
         }
         updateRoleEndpoints(endpoints, role);
+    }
+
+    @Override
+    public Role findByName(String name) {
+        Optional<Role> role = roleRepository.findByName(name);
+        if (role.isEmpty()) {
+            throw new ResourceExistException("Role not valid");
+        }
+        return role.get();
     }
 
 
