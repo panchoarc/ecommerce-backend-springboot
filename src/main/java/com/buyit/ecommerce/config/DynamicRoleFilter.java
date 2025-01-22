@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.buyit.ecommerce.constants.SecurityConstants.PUBLIC_ROUTES;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -48,16 +50,17 @@ public class DynamicRoleFilter extends OncePerRequestFilter {
             // Procesar el endpoint y normalizarlo
             String requestUri = request.getRequestURI();
             String endpoint = requestUri.substring(request.getContextPath().length());
-            String normalizedUrl = normalizeUrl(endpoint);
+
             String method = request.getMethod();
 
-            log.info("Filtering {} {}", method, normalizedUrl);
+            log.info("Filtering outside publicEndpoint {} {}", method, endpoint);
 
             // Verificar si el endpoint es público
-            if (isPublicEndpoint(normalizedUrl, method)) {
+            if (isPublicEndpoint(endpoint, method)) {
                 filterChain.doFilter(request, response);
                 return;
             }
+            String normalizedUrl = normalizeUrl(endpoint);
 
             // Validar autenticación y roles
             Collection<String> userRoles = extractUserRoles(request);
@@ -80,8 +83,22 @@ public class DynamicRoleFilter extends OncePerRequestFilter {
         return requestUri.replaceAll("\\d+", "{id}");
     }
 
-    private boolean isPublicEndpoint(String normalizedUrl, String method) {
-        Optional<Endpoint> isPublicUrl = endpointRepository.findByUrlAndHttpMethod(normalizedUrl, method);
+    private boolean isPublicEndpoint(String uri, String method) {
+
+        log.info("Filtering insidePublicEndpoint {} {}", method, uri);
+        // Verificar si la URL está en las rutas públicas definidas en SECURITY_CONSTANTS
+        boolean isPublicRoute = PUBLIC_ROUTES.stream()
+                .anyMatch(publicRoute -> uri.matches(convertToRegex(publicRoute)));
+
+
+        log.info("isPublicRoute: {}", isPublicRoute);
+        if (isPublicRoute) {
+            return true;  // Si la ruta está en las rutas públicas predefinidas, la dejamos pasar
+        }
+
+        log.info("normalizedUrl: {}", uri);
+        // Verificar si la URL es pública en la base de datos
+        Optional<Endpoint> isPublicUrl = endpointRepository.findByUrlAndHttpMethod(uri, method);
         return isPublicUrl.isPresent() && Boolean.TRUE.equals(isPublicUrl.get().getIsPublic());
     }
 
@@ -109,5 +126,9 @@ public class DynamicRoleFilter extends OncePerRequestFilter {
         }
 
         throw new UnAuthorizedException("User roles not found in token");
+    }
+
+    private String convertToRegex(String publicRoute) {
+        return publicRoute.replace("**", ".*").replace("*", "[^/]*");
     }
 }
