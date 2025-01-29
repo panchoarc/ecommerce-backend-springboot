@@ -26,6 +26,9 @@ logging:
     org.hibernate.SQL: #debug  # Logs SQL queries for debugging
 
 spring:
+  scheduling:
+    cron:
+      backup-cleanup: "0 */5 * * * *"
   servlet:
     multipart:
       max-file-size: 2MB

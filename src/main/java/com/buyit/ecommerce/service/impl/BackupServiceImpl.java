@@ -5,12 +5,15 @@ import com.buyit.ecommerce.service.BackupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.nio.file.Paths;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 
 @Slf4j
 @Service
@@ -20,6 +23,7 @@ public class BackupServiceImpl implements BackupService {
     private final String backupPath;
     private static final String CONTAINER_NAME = "shared-postgres"; // Nombre del contenedor de PostgreSQL
     private static final String BACKUP_FOLDER_IN_CONTAINER = "/backup/"; // Ruta en el contenedor
+    private static final Integer RETENTION_DAYS = 7;
 
     @Value("${spring.datasource.url}")
     private String dbUrl;
@@ -44,6 +48,53 @@ public class BackupServiceImpl implements BackupService {
         return "Backup realizado con éxito en: " + hostBackupPath;
 
     }
+
+
+    @Scheduled(cron = "${spring.scheduling.cron.backup-cleanup}") // Se ejecuta a medianoche todos los días
+    public void deleteOldBackups() {
+        log.info("Ejecutando tarea programada de eliminación de backups...");
+
+        try {
+            File backupDir = new File(backupPath);
+            if (!backupDir.exists() || !backupDir.isDirectory()) {
+                log.warn("La carpeta de backups no existe o no es un directorio: {}", backupPath);
+                return;
+            }
+
+            File[] files = backupDir.listFiles();
+            if (files == null || files.length == 0) {
+                log.info("No hay backups en la carpeta.");
+                return;
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            for (File file : files) {
+                try {
+                    if (file.isFile() && file.getName().endsWith(".sql")) {
+                        LocalDateTime fileTime = LocalDateTime.ofInstant(
+                                Instant.ofEpochMilli(file.lastModified()), java.time.ZoneId.systemDefault());
+
+                        long daysBetween = ChronoUnit.DAYS.between(fileTime, now);
+                        log.info("Revisando archivo: {} ({} días de antigüedad)", file.getName(), daysBetween);
+
+                        if (daysBetween >= RETENTION_DAYS) {
+                            if (file.delete()) {
+                                log.info("Backup eliminado: {}", file.getName());
+                            } else {
+                                log.error("No se pudo eliminar el backup: {}", file.getName());
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("Error al procesar el archivo: {}", file.getName(), e);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Error general al ejecutar la eliminación de backups", e);
+        }
+    }
+
+
 
     // 📌 Genera la fecha y hora actual en formato adecuado para el nombre del backup
     private String generateTimestamp() {
