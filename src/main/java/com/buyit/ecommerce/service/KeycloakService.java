@@ -24,4 +24,6 @@ public interface KeycloakService {
     String getServerToken();
 
     String getServerUrl();
+
+    String getAuthUrl();
 }

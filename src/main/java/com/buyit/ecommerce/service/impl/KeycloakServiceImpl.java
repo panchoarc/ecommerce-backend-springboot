@@ -106,6 +106,11 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     @Override
+    public String getAuthUrl(){
+        return getAuthServerUrl() + "/realms/" + getRealmName() + "/protocol/openid-connect/auth";
+    }
+
+    @Override
     public String getServerToken() {
         return getAuthServerUrl() + "/realms/" + getRealmName() + "/protocol/openid-connect/token";
     }

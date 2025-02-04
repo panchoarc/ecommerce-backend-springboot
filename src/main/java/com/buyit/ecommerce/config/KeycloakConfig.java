@@ -18,17 +18,8 @@ public class KeycloakConfig {
     @Value("${keycloak.realm.name}")
     private String realmName;
 
-    @Value("${keycloak.realm.master-realm}")
-    private String realmMaster;
-
-    @Value("${keycloak.admin.cli}")
-    private String adminCli;
-
-    @Value("${keycloak.admin.user-console}")
-    private String userConsole;
-
-    @Value("${keycloak.admin.password-console}")
-    private String passwordConsole;
+    @Value("${keycloak.client-id}")
+    private String clientId;
 
     @Value("${keycloak.admin.secret}")
     private String clientSecret;
@@ -37,11 +28,10 @@ public class KeycloakConfig {
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
-                .realm(realmMaster)
-                .clientId(adminCli)
-                .username(userConsole)
-                .password(passwordConsole)
-                .clientSecret(clientSecret)
+                .realm(realmName)
+                .clientId(clientId)
+                .clientSecret(clientSecret)  // Usando client credentials
+                .grantType("client_credentials")
                 .build();
     }
 }
