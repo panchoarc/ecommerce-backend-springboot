@@ -10,4 +10,8 @@ public interface AuthService {
     void createUser(UserRegisterDTO userRegisterDTO);
 
     AccessTokenResponse login(UserLoginDTO userLoginDTO) throws JsonProcessingException;
+
+    String loginWithProvider(String provider,String redirectUrl);
+
+    AccessTokenResponse handleAuthCallback(String code, String redirectUrl) throws JsonProcessingException;
 }
