@@ -37,7 +37,9 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void createUser(UserRegisterDTO userRegisterDTO) {
 
-        Role role = roleService.findByName(userRegisterDTO.getRole());
+        String queriedRole = userRegisterDTO.getRole() != null ? userRegisterDTO.getRole() : "user";
+
+        Role role = roleService.findByName(queriedRole);
 
         boolean userExists = userService.userExistsInDatabase(userRegisterDTO.getEmail(), userRegisterDTO.getUserName());
 
@@ -81,5 +83,37 @@ public class AuthServiceImpl implements AuthService {
 
         log.info("Respuesta del token: {}", tokenResponse.getTokenType());
         return tokenResponse;
+    }
+
+    @Override
+    public String loginWithProvider(String provider, String redirectUrl) {
+
+        String url = keycloakService.getAuthUrl() +
+                "?kc_idp_hint=" + provider +
+                "&client_id=" + keycloakService.getClientId() +
+                "&response_type=code" +
+                "&redirect_uri=" + redirectUrl;
+
+        log.info("URL {}", url);
+        return url;
+    }
+
+    @Override
+    public AccessTokenResponse handleAuthCallback(String code, String redirectUrl) throws JsonProcessingException {
+
+        Response response = httpClient.target(keycloakService.getServerToken())
+                .request(MediaType.APPLICATION_FORM_URLENCODED)
+                .post(Entity.form(new jakarta.ws.rs.core.Form()
+                        .param("grant_type", "authorization_code")
+                        .param("client_id", keycloakService.getClientId())
+                        .param("client_secret", keycloakService.getClientSecret())
+                        .param("code", code)
+                        .param("redirect_uri", redirectUrl)));
+
+        String responseBody = response.readEntity(String.class);
+
+        return new ObjectMapper().readValue(responseBody, AccessTokenResponse.class);
+
+
     }
 }
