@@ -11,14 +11,10 @@ jwt:
 
 keycloak:
   server-url: http://localhost:9080
-  client-id: ${jwt.auth.converter.resource-id}
+  client-id: ${jwt.auth.converter.resource-id}  # Mantienes tu cliente actual
   realm:
     name: buyit
-    master-realm: master
   admin:
-    cli: admin-cli
-    user-console: admin
-    password-console: admin
     secret: XXrvGTh9XXd8YyYzfWWLheRxK9GNu2Ha
 
 logging:
