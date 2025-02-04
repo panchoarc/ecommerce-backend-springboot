@@ -129,6 +129,6 @@ public class DynamicRoleFilter extends OncePerRequestFilter {
     }
 
     private String convertToRegex(String publicRoute) {
-        return publicRoute.replace("**", ".*").replace("*", "[^/]*");
+        return publicRoute.replace("**", ".*").replace("*", ".*");
     }
 }
