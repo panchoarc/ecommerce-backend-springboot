@@ -64,8 +64,14 @@ public class DynamicRoleFilter extends OncePerRequestFilter {
 
             // Validar autenticación y roles
             Collection<String> userRoles = extractUserRoles(request);
+            boolean containsAdmin = userRoles.contains("admin");
 
-            if (userRoles == null || userRoles.isEmpty() || !permissionService.hasAccess(normalizedUrl, method, userRoles)) {
+            if (containsAdmin) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            if (userRoles.isEmpty() || !permissionService.hasAccess(normalizedUrl, method, userRoles)) {
                 throw new DeniedAccessException("You cannot access this resource");
             }
 
