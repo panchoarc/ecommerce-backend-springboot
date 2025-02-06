@@ -17,8 +17,15 @@ public class Endpoint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
     @Column(name = "url", nullable = false)
     private String url;
+
+    @Column(name = "base_path", nullable = false)
+    private String basePath;
+
+    @Column(name = "dynamic_path")
+    private String dynamicPath;
 
     @Column(name = "method_name", nullable = false)
     private String methodName;

@@ -14,6 +14,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -72,54 +73,63 @@ public class EndpointServiceImpl implements EndpointService {
 
     private void saveEndpointIfNotExists(String pattern, HandlerMethod handlerMethod, RequestMethod method) {
         // Log opcional para depuración
-        log.info("Processing endpoint {} with HTTP method {}", pattern, method);
+        //log.info("Processing endpoint {} with HTTP method {}", pattern, method);
 
-        // Verificar si el endpoint ya existe en la base de datos usando URL y HTTP method
-        Optional<Endpoint> existingEndpoint = endpointRepository.findByUrlAndHttpMethod(pattern, method.name());
+        String[] extractPaths = extractPaths(pattern);
+        String basePath = extractPaths[0];
+        String dynamicPath = extractPaths.length > 1 ? extractPaths[1] : null;
 
-        if (existingEndpoint.isEmpty()) {
-            // Si el endpoint no existe con este patrón y método, lo creamos
-            createAndSaveNewEndpoint(pattern, handlerMethod, method);
-        } else {
-            // Si el endpoint ya existe, verificamos si alguna propiedad ha cambiado
-            Endpoint existing = existingEndpoint.get();
+        boolean isPublic = isPublicRoute(pattern);
+        log.info("Extracted isPublic: {}", isPublic);
 
-            boolean isUpdated = false;
+        if (!isPublic) {
+            // Verificar si el endpoint ya existe en la base de datos usando URL y HTTP method
+            Optional<Endpoint> existingEndpoint = endpointRepository.findByUrlAndHttpMethod(pattern, method.name());
 
-            // Comparar las partes de las URLs
-            if (!existing.getUrl().equals(handlerMethod.getMethod().getName())) {
-                existing.setUrl(pattern);  // Actualizamos la URL completa
-                isUpdated = true;
-            }
-
-            // Comparar y actualizar otras propiedades (método HTTP, nombre del método)
-            if (!existing.getHttpMethod().equals(method.name())) {
-                existing.setHttpMethod(method.name());
-                isUpdated = true;
-            }
-
-            if (!existing.getMethodName().equals(handlerMethod.getMethod().getName())) {
-                existing.setMethodName(handlerMethod.getMethod().getName());
-                isUpdated = true;
-            }
-
-            // Si hubo cambios, guardamos el endpoint actualizado
-            if (isUpdated) {
-                endpointRepository.saveAndFlush(existing);  // Usamos saveAndFlush para asegurar que se guarda correctamente
-                log.info("Endpoint actualizado: URL = {}, HTTP Method = {}, Method Name = {}", pattern, method, handlerMethod.getMethod().getName());
+            if (existingEndpoint.isEmpty()) {
+                // Si el endpoint no existe con este patrón y método, lo creamos
+                createAndSaveNewEndpoint(pattern, handlerMethod, method);
             } else {
-                log.info("No se detectaron cambios para el endpoint: URL = {}, HTTP Method = {}", pattern, method);
+                // Si el endpoint ya existe, verificamos si alguna propiedad ha cambiado
+                Endpoint existing = existingEndpoint.get();
+
+                existing.setUrl(pattern);  // Actualizamos la URL completa
+                existing.setBasePath(basePath);
+                existing.setDynamicPath(dynamicPath);
+                existing.setHttpMethod(method.name());
+                existing.setMethodName(handlerMethod.getMethod().getName());
+                endpointRepository.saveAndFlush(existing);
+
+                // Usamos saveAndFlush para asegurar que se guarda correctamente
+                //log.info("Endpoint actualizado: URL = {}, HTTP Method = {}, Method Name = {}", pattern, method, handlerMethod.getMethod().getName());
             }
         }
+
+
+    }
+
+    private String[] extractPaths(String pattern) {
+        if (pattern.startsWith("/")) {
+            pattern = pattern.substring(1);  // Elimina la primera barra
+        }
+        return pattern.split("/", 2);  // Divide solo en 2 partes
     }
 
 
     private void createAndSaveNewEndpoint(String pattern, HandlerMethod handlerMethod, RequestMethod method) {
+
+        String[] extractPaths = extractPaths(pattern);
+        log.info("Extracted paths: {}", Arrays.toString(extractPaths));
+        String basePath = extractPaths[0];
+        String dynamicPath = extractPaths.length > 1 ? extractPaths[1] : null;
+
         Endpoint newEndpoint = new Endpoint();
         newEndpoint.setUrl(pattern);
+        newEndpoint.setBasePath(basePath);
+        newEndpoint.setDynamicPath(dynamicPath);
         newEndpoint.setMethodName(handlerMethod.getMethod().getName()); // Nombre del método del controlador
         newEndpoint.setHttpMethod(method.name()); // Método HTTP (GET, POST, etc.)
-        newEndpoint.setIsPublic(isPublicRoute(pattern)); // Verificar si es pública
+        newEndpoint.setIsPublic(false); // Verificar si es pública
         newEndpoint.setIsActive(true);
         endpointRepository.save(newEndpoint);
         log.info("Endpoint created: URL = {}, Method = {}", pattern, method);
@@ -132,6 +142,6 @@ public class EndpointServiceImpl implements EndpointService {
     }
 
     private String convertToRegex(String publicRoute) {
-        return publicRoute.replace("**", ".*").replace("*", "[^/]*");
+        return publicRoute.replace("**", ".*");
     }
 }

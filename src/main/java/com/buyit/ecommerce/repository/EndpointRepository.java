@@ -11,5 +11,5 @@ public interface EndpointRepository extends JpaRepository<Endpoint, Long> {
 
     Optional<Endpoint> findByUrlAndHttpMethod(String pattern, String name);
 
-    Endpoint findByUrl(String endpoint);
+    Optional<Endpoint> findByBasePathAndHttpMethod(String basePath, String name);
 }
