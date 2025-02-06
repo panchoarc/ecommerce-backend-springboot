@@ -2,3 +2,5 @@ databaseChangeLog:
   -
   - includeAll:
       path: db/changelog/2025/01
+  - include:
+      file: db/changelog/2025/02/06-01-changelog.sql
