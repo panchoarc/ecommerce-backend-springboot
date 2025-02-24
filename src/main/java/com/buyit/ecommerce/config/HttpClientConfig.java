@@ -1,15 +1,14 @@
 package com.buyit.ecommerce.config;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class HttpClientConfig {
 
     @Bean
-    public Client httpClient() {
-        return ClientBuilder.newClient();
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }

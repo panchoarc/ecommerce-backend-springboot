@@ -16,7 +16,7 @@ public interface AddressService {
 
     UpdateAddressResponse updateAddress(String keycloakId, Long id, UpdateAddressRequest updateAddressRequest);
 
-    void deleteAddress(Long id);
+    void deleteAddress(String keycloakId,Long id);
 
     Page<UserAddressResponse> getMyAddresses(String keycloakUserId, int page, int size);
 

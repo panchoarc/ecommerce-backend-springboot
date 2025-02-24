@@ -7,17 +7,21 @@ import com.buyit.ecommerce.dto.response.address.UpdateAddressResponse;
 import com.buyit.ecommerce.dto.response.address.UserAddressResponse;
 import com.buyit.ecommerce.entity.Address;
 import com.buyit.ecommerce.entity.User;
+import com.buyit.ecommerce.exception.custom.DeniedAccessException;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
 import com.buyit.ecommerce.mapper.AddressMapper;
 import com.buyit.ecommerce.repository.AddressRepository;
 import com.buyit.ecommerce.service.AddressService;
 import com.buyit.ecommerce.service.UserService;
+import com.buyit.ecommerce.util.ValidationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -27,6 +31,8 @@ public class AddressServiceImpl implements AddressService {
     private final AddressRepository addressRepository;
     private final AddressMapper addressMapper;
     private final UserService userService;
+
+    private final ValidationHelper validationHelper;
 
     @Override
     public Page<UserAddressResponse> getMyAddresses(String keycloakId, int page, int size) {
@@ -60,6 +66,8 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public CreateAddressResponse createAddress(String keycloakId, CreateAddressRequest createAddressRequest) {
 
+        validationHelper.validate(createAddressRequest);
+
         User dbUser = userService.getUserByKeycloakId(keycloakId);
 
         Address createAddress = new Address();
@@ -78,6 +86,8 @@ public class AddressServiceImpl implements AddressService {
     @Override
     public UpdateAddressResponse updateAddress(String keycloakId, Long id, UpdateAddressRequest updateAddressRequest) {
 
+        validationHelper.validate(updateAddressRequest);
+
         User dbUser = userService.getUserByKeycloakId(keycloakId);
         Address address = getAddresByUserIdAndAddress(id);
 
@@ -95,8 +105,15 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
-    public void deleteAddress(Long id) {
+    public void deleteAddress(String keycloakId, Long id) {
+
         Address dbAddress = getAddresByUserIdAndAddress(id);
+
+        User dbUser = userService.getUserByKeycloakId(keycloakId);
+        boolean isOwner = verifyOwnership(id,dbUser);
+        if(!isOwner){
+            throw new DeniedAccessException("You cannot delete this resource.");
+        }
         addressRepository.delete(dbAddress);
     }
 
@@ -108,6 +125,11 @@ public class AddressServiceImpl implements AddressService {
     private Address getAddressByUserIdAndAddress(Long addressId, User dbUser) {
         return addressRepository.findByUserAndAddressId(dbUser, addressId).
                 orElseThrow(() -> new ResourceNotFoundException("User address not found"));
+    }
+
+    private boolean verifyOwnership(Long addressId, User dbUser) {
+        Optional<Address> ownership = addressRepository.findByUserAndAddressId(dbUser, addressId);
+        return ownership.isPresent();
     }
 
 
