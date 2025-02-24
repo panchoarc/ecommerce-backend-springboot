@@ -103,8 +103,8 @@ class AddressServiceTest extends TestContainersConfig {
 
         Map<String, List<String>> errorMessages = errorMessagesUtil.getErrorMessages(exception);
 
-        assertThat(errorMessages.get("city")).contains("no debe estar vacío");
-        assertThat(errorMessages.get("country")).contains("no debe estar vacío");
+        assertThat(errorMessages.get("city")).contains("city cannot be blank");
+        assertThat(errorMessages.get("country")).contains("country cannot be blank");
     }
 
     @Test
@@ -226,8 +226,8 @@ class AddressServiceTest extends TestContainersConfig {
 
         Map<String, List<String>> errorMessages = errorMessagesUtil.getErrorMessages(exception);
 
-        assertThat(errorMessages.get("city")).contains("no debe estar vacío");
-        assertThat(errorMessages.get("country")).contains("no debe estar vacío");
+        assertThat(errorMessages.get("city")).contains("city cannot be blank");
+        assertThat(errorMessages.get("country")).contains("country cannot be blank");
     }
 
     @Test

@@ -136,8 +136,8 @@ class AddressControllerTest extends TestContainersConfig {
                         .content(jsonRequest))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed."))
-                .andExpect(jsonPath("$.errors.country").value("must not be blank"))
-                .andExpect(jsonPath("$.errors.city").value("must not be blank"));
+                .andExpect(jsonPath("$.errors.country").value("country cannot be blank"))
+                .andExpect(jsonPath("$.errors.city").value("city cannot be blank"));
     }
 
 
@@ -190,7 +190,7 @@ class AddressControllerTest extends TestContainersConfig {
                         .content(invalidUpdateJson))
                 .andExpect(status().isBadRequest()) // Esperamos error 400
                 .andExpect(jsonPath("$.message").value("Validation failed."))
-                .andExpect(jsonPath("$.errors.postal_code").value("must not be blank"));
+                .andExpect(jsonPath("$.errors.postal_code").value("postal_code cannot be blank"));
     }
 
 
