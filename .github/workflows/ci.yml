@@ -51,7 +51,7 @@ jobs:
 
       # Run tests with Maven (after secrets replacement)
       - name: Run tests with Maven
-        run: mvn clean test
+        run: ./mvnw clean test
 
       # Build Docker image
       - name: Build Docker image
