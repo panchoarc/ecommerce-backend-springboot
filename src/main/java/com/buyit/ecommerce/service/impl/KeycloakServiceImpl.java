@@ -1,8 +1,10 @@
 package com.buyit.ecommerce.service.impl;
 
 import com.buyit.ecommerce.dto.request.UserRegisterDTO;
+import com.buyit.ecommerce.exception.custom.KeycloakIntegrationException;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
 import com.buyit.ecommerce.service.KeycloakService;
+import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -11,15 +13,14 @@ import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.resource.RealmResource;
 import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.admin.client.resource.UsersResource;
-import org.keycloak.representations.idm.ClientRepresentation;
-import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.RoleRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
+import org.keycloak.representations.idm.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +39,9 @@ public class KeycloakServiceImpl implements KeycloakService {
     @Getter
     @Value("${keycloak.server-url}")
     private String authServerUrl;
+
+    @Value("${keycloak.email-verified}")
+    private boolean emailVerified;
 
 
     @Override
@@ -70,8 +74,9 @@ public class KeycloakServiceImpl implements KeycloakService {
         UserRepresentation keycloakUser = buildKeycloakUserRepresentation(userRegisterDTO);
         try (Response response = getUsersResource().create(keycloakUser)) {
             if (response.getStatus() != 201) {
-                log.error("Keycloak Error: {}", response.readEntity(String.class));
-                return null;
+                Map<String, String> respuesta = response.readEntity(Map.class);
+                log.info("Respuesta: {}", respuesta);
+                throw new KeycloakIntegrationException("Failed to create user in Keycloak: " + respuesta.get("errorMessage"));
             }
             return extractUserIdFromResponse(response);
         }
@@ -90,14 +95,19 @@ public class KeycloakServiceImpl implements KeycloakService {
 
         UserResource userResource = getUsersResource().get(keycloakUserId);
         userResource.roles().clientLevel(clientInternalId).add(List.of(roleToAssign));
-
-        log.info("Assigned role '{}' to user with ID '{}'.", roleToAssign.getName(), keycloakUserId);
     }
 
     @Async("taskExecutor")
     @Override
     public void sendKeycloakVerifyEmail(String keycloakId) {
-        getUsersResource().get(keycloakId).sendVerifyEmail();
+        try {
+            if (!emailVerified) {
+                getUsersResource().get(keycloakId).sendVerifyEmail();
+            }
+        } catch (InternalServerErrorException e) {
+            log.error("Keycloak Error: {}", e.getMessage());
+            throw new KeycloakIntegrationException(e.getMessage());
+        }
     }
 
     @Override
@@ -106,13 +116,49 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     @Override
-    public String getAuthUrl(){
+    public String getAuthUrl() {
         return getAuthServerUrl() + "/realms/" + getRealmName() + "/protocol/openid-connect/auth";
     }
 
     @Override
+    public boolean isProviderEnabled(String providerAlias) {
+
+        List<IdentityProviderRepresentation> providers = getRealmResource().identityProviders().findAll();
+        for (IdentityProviderRepresentation provider : providers) {
+            if (provider.getAlias().equals(providerAlias)) {
+                return provider.isEnabled();
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public String getRedirectProvider(String provider, String redirectUrl) {
+        return getAuthUrl() +
+                "?kc_idp_hint=" + provider +
+                "&client_id=" + getClientId() +
+                "&response_type=code" +
+                "&redirect_uri=" + redirectUrl;
+    }
+
+
+    @Override
     public String getServerToken() {
         return getAuthServerUrl() + "/realms/" + getRealmName() + "/protocol/openid-connect/token";
+    }
+
+    @Override
+    public void deleteUserFromKeycloak(String userId) {
+        UsersResource usersResource = getUsersResource();
+
+        try {
+            usersResource.get(userId).remove();
+        } catch (Exception e) {
+            String errorMessage = String.format("Error al eliminar usuario en Keycloak. ID: %s, Error: %s",
+                    userId, e.getMessage());
+            log.error(errorMessage);
+            throw new KeycloakIntegrationException(errorMessage);
+        }
     }
 
 
@@ -130,6 +176,7 @@ public class KeycloakServiceImpl implements KeycloakService {
         keycloakUser.setFirstName(userRegisterDTO.getFirstName());
         keycloakUser.setLastName(userRegisterDTO.getLastName());
         keycloakUser.setEnabled(true);
+        keycloakUser.setEmailVerified(emailVerified);
 
         CredentialRepresentation credential = new CredentialRepresentation();
         credential.setType(CredentialRepresentation.PASSWORD);
@@ -149,12 +196,16 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     public ClientRepresentation getClientRepresentation() {
-        return getRealmResource()
+
+        Optional<ClientRepresentation> client = getRealmResource()
                 .clients()
                 .findByClientId(clientId)
                 .stream()
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Client with clientId '" + clientId + "' not found"));
-    }
+                .findFirst();
 
+        if (client.isEmpty()) {
+            throw new ResourceNotFoundException("Client with clientId '" + clientId + "' not found");
+        }
+        return client.get();
+    }
 }

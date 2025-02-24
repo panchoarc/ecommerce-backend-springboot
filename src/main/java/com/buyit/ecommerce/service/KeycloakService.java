@@ -23,7 +23,13 @@ public interface KeycloakService {
 
     String getServerToken();
 
+    void deleteUserFromKeycloak(String userId);
+
     String getServerUrl();
 
     String getAuthUrl();
+
+    boolean isProviderEnabled(String providerAlias);
+
+    String getRedirectProvider(String provider, String redirectUrl);
 }
