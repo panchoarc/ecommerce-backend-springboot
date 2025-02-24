@@ -76,7 +76,7 @@ class AuthControllerTest extends TestContainersConfig {
     @Test
     @Transactional
     @Rollback
-    void should_RegisterFail_WhenInvalidParametersRequest() throws Exception {
+    void Should_RegisterFail_WhenInvalidParametersRequest() throws Exception {
 
         UserRegisterDTO userRegister = new UserRegisterDTO();
         userRegister.setEmail("testuser@example.com");
@@ -89,14 +89,14 @@ class AuthControllerTest extends TestContainersConfig {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors.firstname").value("First name cannot be blank"))
-                .andExpect(jsonPath("$.errors.lastname").value("Last name cannot be blank"));
+                .andExpect(jsonPath("$.errors.firstname").value("firstname cannot be blank"))
+                .andExpect(jsonPath("$.errors.lastname").value("lastname cannot be blank"));
     }
 
     @Test
     @Transactional
     @Rollback
-    void should_RegisterSuccessful_WhenValidCredentials() throws Exception {
+    void Should_RegisterSuccessful_WhenValidCredentials() throws Exception {
         String jsonRequest = objectMapper.writeValueAsString(userRegisterDTO);
 
         mockMvc.perform(post("/auth/register")
@@ -120,7 +120,7 @@ class AuthControllerTest extends TestContainersConfig {
                         .content(jsonRequest))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.password").value("Your password must have between 8 and 20 characters"))
-                .andExpect(jsonPath("$.errors.username").value("Username must have between 6 and 50 characters."));
+                .andExpect(jsonPath("$.errors.username").value("username must have between 6 and 50 characters."));
     }
 
     @Test

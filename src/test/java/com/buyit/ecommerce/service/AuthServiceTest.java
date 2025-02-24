@@ -48,11 +48,11 @@ class AuthServiceTest extends TestContainersConfig {
     private final ErrorMessagesUtil errorMessagesUtil = new ErrorMessagesUtil();
 
     // Mensajes de error esperados
-    private static final String EMAIL_INVALID_FORMAT = "Email hasn't a valid format";
-    private static final String EMAIL_BLANK = "Email cannot be blank.";
-    private static final String FIRSTNAME_BLANK = "First name cannot be blank";
+    private static final String EMAIL_INVALID_FORMAT = "email hasn't a valid format";
+    private static final String EMAIL_BLANK = "email cannot be blank";
+    private static final String FIRSTNAME_BLANK = "firstname cannot be blank";
     private static final String PASSWORD_LENGTH = "Your password must have between 8 and 20 characters";
-    private static final String USERNAME_INVALID_LENGTH = "Username must have between 6 and 50 characters.";
+    private static final String USERNAME_INVALID_LENGTH = "username must have between 6 and 50 characters.";
 
     @BeforeEach
     void setUp() {
@@ -90,9 +90,7 @@ class AuthServiceTest extends TestContainersConfig {
 
         Map<String, List<String>> errorMessages = errorMessagesUtil.getErrorMessages(exception);
 
-        // Verificaciones de mensajes de error
-        assertTrue(errorMessages.containsKey("email"));
-        assertTrue(errorMessages.containsKey("password"));
+
         assertTrue(errorMessages.get("email").contains(EMAIL_BLANK));
         assertTrue(errorMessages.get("email").contains(EMAIL_INVALID_FORMAT));
         assertTrue(errorMessages.get("firstName").contains(FIRSTNAME_BLANK));
@@ -141,11 +139,8 @@ class AuthServiceTest extends TestContainersConfig {
 
         Map<String, List<String>> errorMessages = errorMessagesUtil.getErrorMessages(exception);
 
-        log.info("Error Messages {}", errorMessages);
+        log.info("ERRORS: {}",errorMessages);
 
-        // Verificaciones de mensajes de error
-        assertTrue(errorMessages.containsKey("userName"));
-        assertTrue(errorMessages.containsKey("password"));
         assertTrue(errorMessages.get("userName").contains(USERNAME_INVALID_LENGTH));
         assertTrue(errorMessages.get("password").contains(PASSWORD_LENGTH));
     }
