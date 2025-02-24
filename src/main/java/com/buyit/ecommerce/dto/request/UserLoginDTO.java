@@ -1,6 +1,5 @@
 package com.buyit.ecommerce.dto.request;
 
-import com.buyit.ecommerce.anotations.ValidPassword;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -22,6 +21,5 @@ public class UserLoginDTO {
     @NotBlank(message = "Password cannot be blank")
     @Size(min = 8, max = 20, message = "Your password must have between 8 and 20 characters")
     @JsonProperty(value = "password")
-    @ValidPassword
     private String password;
 }

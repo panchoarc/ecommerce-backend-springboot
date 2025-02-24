@@ -26,8 +26,8 @@ public class UserRegisterDTO {
 
     @NotBlank(message = "Email cannot be blank.")
     @Size(max = 200, message = "Email cannot have more than 200 characters.")
-    @JsonProperty(value = "email")
     @ValidEmail
+    @JsonProperty(value = "email")
     private String email;
 
     @NotBlank(message = "Username cannot be blank")
@@ -36,9 +36,9 @@ public class UserRegisterDTO {
     private String userName;
 
     @NotBlank(message = "Password cannot be blank")
-    @Size(min = 8, max = 20, message = "Your password must have between 8 and 20 characters")
-    @JsonProperty(value = "password")
+    @Size(min = 8, max = 50, message = "Your password must have between 8 and 20 characters")
     @ValidPassword
+    @JsonProperty(value = "password")
     private String password;
 
     @JsonProperty("role")
