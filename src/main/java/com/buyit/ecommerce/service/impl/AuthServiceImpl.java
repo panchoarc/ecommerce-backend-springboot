@@ -3,24 +3,33 @@ package com.buyit.ecommerce.service.impl;
 import com.buyit.ecommerce.dto.request.UserLoginDTO;
 import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.entity.Role;
+import com.buyit.ecommerce.entity.User;
+import com.buyit.ecommerce.exception.custom.AuthenticationException;
 import com.buyit.ecommerce.exception.custom.KeycloakIntegrationException;
 import com.buyit.ecommerce.exception.custom.ResourceExistException;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
+import com.buyit.ecommerce.repository.UsersRepository;
 import com.buyit.ecommerce.service.AuthService;
 import com.buyit.ecommerce.service.KeycloakService;
 import com.buyit.ecommerce.service.RoleService;
 import com.buyit.ecommerce.service.UserService;
+import com.buyit.ecommerce.util.ValidationHelper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.AccessTokenResponse;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,13 +38,16 @@ public class AuthServiceImpl implements AuthService {
 
     private final UserService userService;
     private final RoleService roleService;
-    private final Client httpClient;
     private final KeycloakService keycloakService;
-
+    private final RestTemplate restTemplate;
+    private final ValidationHelper validationHelper;
+    private final UsersRepository usersRepository;
+    private final ObjectMapper objectMapper;
 
     @Override
-    @Transactional
     public void createUser(UserRegisterDTO userRegisterDTO) {
+
+        validationHelper.validate(userRegisterDTO);
 
         String queriedRole = userRegisterDTO.getRole() != null ? userRegisterDTO.getRole() : "user";
 
@@ -48,72 +60,94 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String keycloakUserId = keycloakService.createUserInKeycloak(userRegisterDTO);
-        if (keycloakUserId == null) {
-            throw new KeycloakIntegrationException("Failed to create user in Keycloak.");
+
+        try {
+            keycloakService.assignDefaultRoleToUser(keycloakUserId, role.getName());
+            userService.saveUserToDatabase(userRegisterDTO, keycloakUserId);
+            keycloakService.sendKeycloakVerifyEmail(keycloakUserId);
+        } catch (KeycloakIntegrationException e) {
+            log.error("Failed to create user in Keycloak {}. {}", keycloakUserId, e.getMessage());
+            keycloakService.deleteUserFromKeycloak(keycloakUserId);
         }
-
-        keycloakService.assignDefaultRoleToUser(keycloakUserId, role.getName());
-        userService.saveUserToDatabase(userRegisterDTO, keycloakUserId);
-
-        keycloakService.sendKeycloakVerifyEmail(keycloakUserId);
-
-        log.info("User '{}' created successfully.", userRegisterDTO.getUserName());
     }
 
     @Override
     public AccessTokenResponse login(UserLoginDTO userLoginDTO) throws JsonProcessingException {
+        validationHelper.validate(userLoginDTO);
 
-        Response response = httpClient.target(keycloakService.getServerToken())
-                .request(MediaType.APPLICATION_FORM_URLENCODED)
-                .post(Entity.form(new jakarta.ws.rs.core.Form()
-                        .param("grant_type", "password")
-                        .param("client_id", keycloakService.getClientId())
-                        .param("client_secret", keycloakService.getClientSecret())
-                        .param("username", userLoginDTO.getUserName())
-                        .param("password", userLoginDTO.getPassword())));
-
-        String responseBody = response.readEntity(String.class);
-        if (response.getStatus() != 200) {
-            log.error("Keycloak login failed: {}", responseBody);
-            throw new ResourceNotFoundException("Invalid username or password. Details: " + responseBody);
+        Optional<User> userFound = usersRepository.findByUserName(userLoginDTO.getUserName());
+        if (userFound.isEmpty()) {
+            throw new ResourceNotFoundException("User not found");
         }
 
-        AccessTokenResponse tokenResponse = new ObjectMapper().readValue(responseBody, AccessTokenResponse.class);
-        log.info("User '{}' logged in successfully.", userLoginDTO.getUserName());
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "password");
+        form.add("client_id", keycloakService.getClientId());
+        form.add("client_secret", keycloakService.getClientSecret());
+        form.add("username", userLoginDTO.getUserName());
+        form.add("password", userLoginDTO.getPassword());
 
-        log.info("Respuesta del token: {}", tokenResponse.getTokenType());
-        return tokenResponse;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    keycloakService.getServerToken(),
+                    entity,
+                    String.class
+            );
+            return objectMapper.readValue(response.getBody(), AccessTokenResponse.class);
+        } catch (HttpClientErrorException.Unauthorized e) {
+            log.error("Excepción {}", e.getMessage());
+            throw new AuthenticationException("Invalid credentials");
+        } catch (HttpClientErrorException e) {
+            throw new AuthenticationException("Login failed. Details: " + e.getResponseBodyAsString());
+        }
     }
 
     @Override
     public String loginWithProvider(String provider, String redirectUrl) {
 
-        String url = keycloakService.getAuthUrl() +
-                "?kc_idp_hint=" + provider +
-                "&client_id=" + keycloakService.getClientId() +
-                "&response_type=code" +
-                "&redirect_uri=" + redirectUrl;
+        boolean isProviderEnabled = keycloakService.isProviderEnabled(provider);
 
-        log.info("URL {}", url);
-        return url;
+        if (!isProviderEnabled) {
+            throw new ResourceNotFoundException("Provider " + provider + " is not enabled");
+        }
+
+        return keycloakService.getRedirectProvider(provider, redirectUrl);
     }
 
     @Override
     public AccessTokenResponse handleAuthCallback(String code, String redirectUrl) throws JsonProcessingException {
 
-        Response response = httpClient.target(keycloakService.getServerToken())
-                .request(MediaType.APPLICATION_FORM_URLENCODED)
-                .post(Entity.form(new jakarta.ws.rs.core.Form()
-                        .param("grant_type", "authorization_code")
-                        .param("client_id", keycloakService.getClientId())
-                        .param("client_secret", keycloakService.getClientSecret())
-                        .param("code", code)
-                        .param("redirect_uri", redirectUrl)));
+        MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+        form.add("grant_type", "authorization_code");
+        form.add("client_id", keycloakService.getClientId());
+        form.add("client_secret", keycloakService.getClientSecret());
+        form.add("code", code);
+        form.add("redirect_uri", redirectUrl);
 
-        String responseBody = response.readEntity(String.class);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        return new ObjectMapper().readValue(responseBody, AccessTokenResponse.class);
+        HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(form, headers);
 
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(
+                    keycloakService.getServerToken(),
+                    entity,
+                    String.class
+            );
 
+            String responseBody = response.getBody();
+            return objectMapper.readValue(responseBody, AccessTokenResponse.class);
+
+        } catch (HttpClientErrorException.Unauthorized e) {
+            throw new AuthenticationException("Invalid credentials");
+        } catch (HttpClientErrorException e) {
+            log.error("Keycloak login failed: {}", e.getResponseBodyAsString());
+            throw new AuthenticationException("Login failed. Details: " + e.getResponseBodyAsString());
+        }
     }
 }

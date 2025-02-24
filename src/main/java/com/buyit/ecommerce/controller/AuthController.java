@@ -8,6 +8,7 @@ import com.buyit.ecommerce.util.ResponseBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.AccessTokenResponse;
@@ -26,14 +27,14 @@ public class AuthController {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResponse<Void> registerUser(@RequestBody UserRegisterDTO userRegisterDTO) {
+    public ApiResponse<Void> registerUser(@Valid @RequestBody UserRegisterDTO userRegisterDTO) {
         authService.createUser(userRegisterDTO);
         return ResponseBuilder.success("User created successfully", null);
     }
 
     @PostMapping("/login")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<AccessTokenResponse> loginUser(@RequestBody UserLoginDTO userLoginDTO) throws JsonProcessingException {
+    public ApiResponse<AccessTokenResponse> loginUser(@Valid @RequestBody UserLoginDTO userLoginDTO) throws JsonProcessingException {
         AccessTokenResponse token = authService.login(userLoginDTO);
         return ResponseBuilder.success("Login successfully", token);
     }
