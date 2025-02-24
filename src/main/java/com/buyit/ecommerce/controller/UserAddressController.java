@@ -74,8 +74,9 @@ public class UserAddressController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ApiResponse<Void> deleteAddress(@PathVariable("id") Long id) {
-        addressService.deleteAddress(id);
+    public ApiResponse<Void> deleteAddress(@PathVariable("id") Long id, @AuthenticationPrincipal Jwt user) {
+        String keycloakId = userService.extractKeycloakIdFromUser(user);
+        addressService.deleteAddress(keycloakId, id);
         return ResponseBuilder.success("Address deleted successfully", null);
     }
 }
