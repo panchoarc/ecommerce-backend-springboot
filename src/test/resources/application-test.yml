@@ -1,0 +1,77 @@
+server:
+  port: 8080  # Puedes cambiar el puerto para evitar conflictos con el entorno de producción
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: BuyIT ecommerce Test
+  scheduling:
+    cron:
+      backup-cleanup: "0 */5 * * * *"
+  servlet:
+    multipart:
+      max-file-size: 2MB
+      max-request-size: 20MB
+      enabled: on
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${keycloak.server-url}/realms/buyit
+          jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
+
+  datasource:
+    # Opcional: Configuración de H2 en memoria para pruebas
+    driver-class-name: org.postgresql.Driver
+    username:
+    password:
+    url:
+
+  jpa:
+    hibernate:
+      ddl-auto: none  # Usa 'create', 'update' o 'validate' según tus necesidades para pruebas
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+        use_sql_comments: false
+        generate_statistics: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false  # Evitar LazyInitializationException
+
+  liquibase:
+    enabled: false
+    change-log: classpath:/db/changelog/db.changelog-master.yaml  # Cambia si tienes un changelog específico para pruebas
+    drop-first: false  # Eliminar las tablas antes de cada ejecución para asegurar que la base esté limpia
+
+jwt:
+  auth:
+    converter:
+      resource-id: buyit-client
+      principal-attribute: preferred_username
+
+keycloak:
+  server-url: ${keycloak.auth-server-url}
+  client-id: ${jwt.auth.converter.resource-id}
+  email-verified: true
+  realm:
+    name: buyit
+  admin:
+    secret: e6JvhU4pdSjgtE4WzZU7NZBOquJ5RuUT
+
+logging:
+  level:
+    org.hibernate.SQL: OFF  # Habilitar el logging de las consultas SQL para depurar
+    #org.testcontainers: OFF
+    #tc.testcontainers: OFF
+    org.springframework.security: DEBUG
+
+
+
+
+
+
+
+
+
