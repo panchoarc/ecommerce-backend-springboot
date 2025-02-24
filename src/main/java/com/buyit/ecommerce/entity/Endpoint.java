@@ -10,7 +10,6 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString
 public class Endpoint {
 
     @Id
@@ -27,12 +26,8 @@ public class Endpoint {
     @Column(name = "dynamic_path")
     private String dynamicPath;
 
-    @Column(name = "method_name", nullable = false)
-    private String methodName;
-
     @Column(name = "http_method", nullable = false) // Agregamos el campo http_method
     private String httpMethod; // Campo para el método HTTP
-
 
     @Column(name = "is_public", nullable = false)
     private Boolean isPublic;
