@@ -2,7 +2,9 @@ package com.buyit.ecommerce.service;
 
 import java.io.IOException;
 
-public interface BackupService {
+public interface DatabaseService {
 
     String createDatabaseBackup() throws IOException, InterruptedException;
+
+    String restoreDatabaseBackup();
 }

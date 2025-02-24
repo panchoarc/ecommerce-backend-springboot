@@ -1,7 +1,7 @@
 package com.buyit.ecommerce.service.impl;
 
 import com.buyit.ecommerce.exception.custom.BackupFailedException;
-import com.buyit.ecommerce.service.BackupService;
+import com.buyit.ecommerce.service.DatabaseService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +18,7 @@ import java.time.temporal.ChronoUnit;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BackupServiceImpl implements BackupService {
+public class DatabaseServiceImpl implements DatabaseService {
 
     private final String backupPath;
     private static final String CONTAINER_NAME = "shared-postgres"; // Nombre del contenedor de PostgreSQL
@@ -31,7 +31,7 @@ public class BackupServiceImpl implements BackupService {
     @Value("${spring.datasource.username}")
     private String dbUser;
 
-    public BackupServiceImpl() {
+    public DatabaseServiceImpl() {
         this.backupPath = determineBackupPath();
         createDirectoryIfNotExists(backupPath);
     }
@@ -44,9 +44,13 @@ public class BackupServiceImpl implements BackupService {
         String hostBackupPath = Paths.get(backupPath, backupFilename).toString();
 
         executeBackupInContainer(containerBackupPath);
-        copyBackupToHost(containerBackupPath, hostBackupPath);
         return "Backup realizado con éxito en: " + hostBackupPath;
 
+    }
+
+    @Override
+    public String restoreDatabaseBackup() {
+        return "";
     }
 
 
@@ -123,19 +127,11 @@ public class BackupServiceImpl implements BackupService {
     private void executeBackupInContainer(String containerBackupPath) {
         String dbName = extractDatabaseName();
         String command = String.format(
-                "docker exec %s pg_dump -U %s -F p -b -f \"%s\" %s",
+                "docker exec %s pg_dump -U %s --column-inserts -f \"%s\" %s",
                 CONTAINER_NAME, dbUser, containerBackupPath, dbName
         );
 
         log.info("Ejecutando backup en el contenedor: {}", command);
-        executeCommand(command);
-    }
-
-    // 📌 Copia el backup desde el contenedor al host
-    private void copyBackupToHost(String containerBackupPath, String hostBackupPath) {
-        String command = String.format("docker cp %s:%s %s", CONTAINER_NAME, containerBackupPath, hostBackupPath);
-
-        log.info("Copiando backup al host: {}", command);
         executeCommand(command);
     }
 

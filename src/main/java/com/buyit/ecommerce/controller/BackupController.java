@@ -1,6 +1,8 @@
 package com.buyit.ecommerce.controller;
 
-import com.buyit.ecommerce.service.BackupService;
+import com.buyit.ecommerce.service.DatabaseService;
+import com.buyit.ecommerce.util.ApiResponse;
+import com.buyit.ecommerce.util.ResponseBuilder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -15,13 +17,13 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class BackupController {
 
-    private final BackupService backupService;
-
+    private final DatabaseService databaseService;
 
     @PostMapping("/create")
     @ResponseStatus(HttpStatus.CREATED)
-    public String createBackup() throws IOException, InterruptedException {
-        return backupService.createDatabaseBackup();
-    }
+    public ApiResponse<String> createBackup() throws IOException, InterruptedException {
 
+        String urlBackup = databaseService.createDatabaseBackup();
+        return ResponseBuilder.success("Backup created successfully", urlBackup);
+    }
 }
