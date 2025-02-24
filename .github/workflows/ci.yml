@@ -42,11 +42,11 @@ jobs:
         run: |
           jq '.identityProviders[].config.clientId = "${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
           jq '.identityProviders[].config.clientSecret = "${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer[].password = "${{secrets.GOOGLE_SMTP_PASSWORD}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer[].from = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer[].fromDisplayName = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer[].envelopeFrom = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer[].user = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
+          jq '.smtpServer.password = "${{secrets.GOOGLE_SMTP_PASSWORD}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
+          jq '.smtpServer.from = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
+          jq '.smtpServer.fromDisplayName = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
+          jq '.smtpServer.envelopeFrom = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
+          jq '.smtpServer.user = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
           
 
       # Run tests with Maven (after secrets replacement)
