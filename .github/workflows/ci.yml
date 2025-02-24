@@ -13,60 +13,45 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Set up Java 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: maven
 
-      # Cache Maven dependencies
-      - name: Cache Maven dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
-
-      # Install jq to manipulate JSON files
       - name: Install jq
-        run: sudo apt-get install jq
+        run: sudo apt-get install -y jq
 
-      # Replace client secrets in the exported realm file (before running tests)
       - name: Replace client secrets in exported realm file
         run: |
-          jq '.identityProviders[].config.clientId = "${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.identityProviders[].config.clientSecret = "${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer.password = "${{secrets.GOOGLE_SMTP_PASSWORD}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer.from = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer.fromDisplayName = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer.envelopeFrom = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          jq '.smtpServer.user = "${{secrets.GOOGLE_SMTP_EMAIL}}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
-          
+          jq '.identityProviders[].config.clientId = "${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}" |
+              .identityProviders[].config.clientSecret = "${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}" |
+              .smtpServer.password = "${{ secrets.GOOGLE_SMTP_PASSWORD }}" |
+              .smtpServer.from = "${{ secrets.GOOGLE_SMTP_EMAIL }}" |
+              .smtpServer.fromDisplayName = "${{ secrets.GOOGLE_SMTP_EMAIL }}" |
+              .smtpServer.envelopeFrom = "${{ secrets.GOOGLE_SMTP_EMAIL }}" |
+              .smtpServer.user = "${{ secrets.GOOGLE_SMTP_EMAIL }}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
 
-      # Run tests with Maven (after secrets replacement)
-      - name: Run tests with Maven
-        run: mvn clean test
+      - name: Grant execute permissions to Maven wrapper
+        run: chmod +x ./mvnw
 
-      # Build Docker image
+      - name: Running tests
+        run: ./mvnw clean install test
+
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/ecommerce-spring-boot:${{ github.sha }} .
+          docker build --no-cache -t ${{ secrets.DOCKER_USERNAME }}/ecommerce-spring-boot:${{ github.sha }} .
 
-      # Log in to Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Push Docker image to Docker Hub (or any other Docker registry)
       - name: Push Docker image
         run: |
           docker push ${{ secrets.DOCKER_USERNAME }}/ecommerce-spring-boot:${{ github.sha }}
-
