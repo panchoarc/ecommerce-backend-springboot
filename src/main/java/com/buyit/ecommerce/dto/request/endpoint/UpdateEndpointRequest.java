@@ -15,10 +15,10 @@ import lombok.Setter;
 public class UpdateEndpointRequest {
 
     @JsonProperty("is_public")
-    @NotNull(message = "Cannot be null")
+    @NotNull(message = "is_public needs a boolean value")
     private Boolean isPublic;
 
     @JsonProperty("is_active")
-    @NotNull(message = "Cannot be null")
+    @NotNull(message = "is_active needs a boolean value")
     private Boolean isActive;
 }

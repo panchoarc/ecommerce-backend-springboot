@@ -17,27 +17,28 @@ import java.util.List;
 @AllArgsConstructor
 public class UpdateProductRequest {
 
-    @NotBlank(message = "Product name")
+    @NotBlank(message = "name cannot be blank")
     @JsonProperty("name")
     private String name;
 
-    @NotBlank(message = "Product description")
-    @Size(min = 1, max = 1000, message = "Product has to get between 1 and 1000 characters")
+    @NotBlank(message = "description cannot be blank")
+    @Size(min = 1, max = 1000, message = "description has to get between 1 and 1000 characters")
     @JsonProperty("description")
     private String description;
 
-    @Positive(message = "Product price could not be lower than 0")
+    @Positive(message = "price could not be lower than 0")
     @JsonProperty("price")
     private BigDecimal price;
 
-    @Positive(message = "Product quantity could not be lower than 0")
+    @Positive(message = "quantity could not be lower than 0")
     @JsonProperty("quantity")
     private int quantity;
 
-    @NotNull
+    @NotNull(message = "is_active needs to be a boolean value")
     @JsonProperty("is_active")
     private Boolean isActive;
 
+    @NotNull(message = "category_ids needs at least one category")
     @JsonProperty("category_ids")
     private List<Long> categoryIds;
 }

@@ -11,19 +11,19 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateAddressRequest {
 
-    @NotBlank
+    @NotBlank(message = "city cannot be blank")
     @JsonProperty("city")
     private String city;
 
-    @NotBlank
+    @NotBlank(message = "country cannot be blank")
     @JsonProperty("country")
     private String country;
 
-    @NotBlank
+    @NotBlank(message = "postal_code cannot be blank")
     @JsonProperty("postal_code")
     private String postalCode;
 
-    @NotBlank
+    @NotBlank(message = "street cannot be blank")
     @JsonProperty("street")
     private String street;
 }

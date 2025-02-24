@@ -14,20 +14,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateReviewRequest {
 
-    @NotBlank
+    @NotBlank(message = "title cannot be blank")
     @JsonProperty("title")
     private String title;
 
-    @NotBlank
+    @NotBlank(message = "comment cannot be blank")
     @JsonProperty("comment")
     private String comment;
 
-    @Min(value = 1)
-    @Max(value = 5)
+    @Min(value = 1,message = "rating cannot be lower than 1")
+    @Max(value = 5,message = "rating cannot be higher than 5")
     @JsonProperty("rating")
     private Long rating;
 
-    @Positive
+    @Positive(message = "product_id cannot be negative")
     @JsonProperty("product_id")
     private Long productId;
 
