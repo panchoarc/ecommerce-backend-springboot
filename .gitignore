@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### MISC ###
+
+.env
+/src/test/resources/realm-export.json
