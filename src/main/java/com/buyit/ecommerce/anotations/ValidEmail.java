@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 @Target({ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidEmail {
-    String message() default "Email hasn't a valid format";
+    String message() default "email hasn't a valid format";
 
     Class<?>[] groups() default {};
 
