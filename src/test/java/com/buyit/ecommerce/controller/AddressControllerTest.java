@@ -33,6 +33,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -94,6 +95,93 @@ class AddressControllerTest extends TestContainersConfig {
         return response.getToken();
     }
 
+
+    @Test
+    @Transactional
+    @Rollback
+    void Should_ThrowUnAuthorized_When_AuthNotProvided() throws Exception {
+
+        mockMvc.perform(get("/address/search")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void Should_ReturnMyAddress_When_AuthorizationIsProvided() throws Exception {
+
+        mockMvc.perform(get("/address/search")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message").value("My addresses found"))
+                .andDo(print());
+    }
+
+
+    @Test
+    @Transactional
+    @Rollback
+    void Should_ThrowUnauthorized_When_AuthorizationIsProvided() throws Exception {
+
+        CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setCity("CityTest");
+        addressRequest.setCountry("CountryTest");
+        addressRequest.setStreet("StreetTest");
+        addressRequest.setPostalCode("PostalCodeTest");
+
+        CreateAddressResponse addressResponse = createAddress(addressRequest);
+
+        mockMvc.perform(get("/address/{id}", addressResponse.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @Transactional
+    @Rollback
+    void Should_AddressNotFound_When_AddressNotExistAndAuthorizationIsProvided() throws Exception {
+
+        CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setCity("CityTest");
+        addressRequest.setCountry("CountryTest");
+        addressRequest.setStreet("StreetTest");
+        addressRequest.setPostalCode("PostalCodeTest");
+
+        CreateAddressResponse addressResponse = createAddress(addressRequest);
+
+        mockMvc.perform(get("/address/{id}", addressResponse.getId() + 1)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Resource not found."))
+                .andExpect(jsonPath("$.errors.message").value("User address not found"));
+    }
+
+
+    @Test
+    @Transactional
+    @Rollback
+    void Should_ReturnAddress_When_AddressExistsAndAuthorizationIsProvided() throws Exception {
+
+        CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setCity("CityTest");
+        addressRequest.setCountry("CountryTest");
+        addressRequest.setStreet("StreetTest");
+        addressRequest.setPostalCode("PostalCodeTest");
+
+        CreateAddressResponse addressResponse = createAddress(addressRequest);
+
+        mockMvc.perform(get("/address/{id}", addressResponse.getId())
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.city").value(addressResponse.getCity()))
+                .andExpect(jsonPath("$.data.country").value(addressResponse.getCountry()))
+                .andExpect(jsonPath("$.data.street").value(addressResponse.getStreet()))
+                .andExpect(jsonPath("$.data.postal_code").value(addressResponse.getPostalCode()));
+    }
 
     @Test
     @Transactional
