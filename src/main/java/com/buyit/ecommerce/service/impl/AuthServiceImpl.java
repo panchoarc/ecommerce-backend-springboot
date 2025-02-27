@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.AccessTokenResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -44,6 +45,9 @@ public class AuthServiceImpl implements AuthService {
     private final UsersRepository usersRepository;
     private final ObjectMapper objectMapper;
 
+    @Value("${keycloak.email-verified}")
+    private boolean emailVerified;
+
     @Override
     public void createUser(UserRegisterDTO userRegisterDTO) {
 
@@ -64,7 +68,9 @@ public class AuthServiceImpl implements AuthService {
         try {
             keycloakService.assignDefaultRoleToUser(keycloakUserId, role.getName());
             userService.saveUserToDatabase(userRegisterDTO, keycloakUserId);
-            keycloakService.sendKeycloakVerifyEmail(keycloakUserId);
+            if(!emailVerified){
+                keycloakService.sendKeycloakVerifyEmail(keycloakUserId);
+            }
         } catch (KeycloakIntegrationException e) {
             log.error("Failed to create user in Keycloak {}. {}", keycloakUserId, e.getMessage());
             keycloakService.deleteUserFromKeycloak(keycloakUserId);

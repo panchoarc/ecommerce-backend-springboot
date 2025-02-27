@@ -34,7 +34,7 @@ spring:
     name: BuyIT ecommerce
   jpa:
     hibernate:
-      ddl-auto: update  # Use 'validate', 'create', or 'update' depending on your needs
+      ddl-auto: none  # Use 'validate', 'create', or 'update' depending on your needs
     properties:
       hibernate:
         format_sql: false
@@ -53,7 +53,7 @@ jwt:
 keycloak:
   server-url: http://localhost:9080
   client-id: ${jwt.auth.converter.resource-id}  # Mantienes tu cliente actual
-  email-verified: false
+  email-verified: true
   realm:
     name: buyit
   admin:
