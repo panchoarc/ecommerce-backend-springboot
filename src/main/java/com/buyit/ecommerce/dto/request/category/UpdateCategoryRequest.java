@@ -1,6 +1,7 @@
 package com.buyit.ecommerce.dto.request.category;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -12,15 +13,15 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateCategoryRequest {
 
-    @NotEmpty
+    @NotBlank(message = "name cannot be blank")
     @JsonProperty("name")
     private String categoryName;
 
-    @NotEmpty
+    @NotEmpty(message = "description cannot be blank")
     @JsonProperty("description")
     private String description;
 
-    @NotNull
+    @NotNull(message = "is_active needs to be a boolean value")
     @JsonProperty("is_active")
     private Boolean isActive;
 
