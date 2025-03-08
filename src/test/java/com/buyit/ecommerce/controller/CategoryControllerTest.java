@@ -1,7 +1,6 @@
 package com.buyit.ecommerce.controller;
 
 import com.buyit.ecommerce.config.TestContainersConfig;
-import com.buyit.ecommerce.dto.request.UserLoginDTO;
 import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.dto.request.category.CategoryRequest;
 import com.buyit.ecommerce.dto.request.category.CreateCategoryRequest;
@@ -11,6 +10,7 @@ import com.buyit.ecommerce.entity.User;
 import com.buyit.ecommerce.repository.UsersRepository;
 import com.buyit.ecommerce.service.AuthService;
 import com.buyit.ecommerce.service.KeycloakService;
+import com.buyit.ecommerce.util.TokenExtractor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,7 +21,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,6 +59,9 @@ class CategoryControllerTest extends TestContainersConfig {
     @Autowired
     private UsersRepository usersRepository;
 
+    @Autowired
+    private TokenExtractor tokenExtractor;
+
     public String token;
 
     @BeforeEach()
@@ -74,7 +76,7 @@ class CategoryControllerTest extends TestContainersConfig {
         adminUserDTO.setRole("admin");
 
         authService.createUser(adminUserDTO);
-        token = extractTokenFromUser(adminUserDTO.getUserName(), adminUserDTO.getPassword());
+        token = tokenExtractor.extractTokenFromUser(adminUserDTO.getUserName(), adminUserDTO.getPassword());
 
     }
 
@@ -85,15 +87,6 @@ class CategoryControllerTest extends TestContainersConfig {
         for (User user : users) {
             keycloakService.deleteUserFromKeycloak(user.getKeycloakUserId());
         }
-    }
-
-    private String extractTokenFromUser(String username, String password) throws JsonProcessingException {
-        UserLoginDTO userLoginDTO = new UserLoginDTO();
-        userLoginDTO.setUserName(username);
-        userLoginDTO.setPassword(password);
-
-        AccessTokenResponse response = authService.login(userLoginDTO);
-        return response.getToken();
     }
 
     @Test
@@ -196,7 +189,7 @@ class CategoryControllerTest extends TestContainersConfig {
         normalUserDTO.setPassword("SecurePass123!");
 
         authService.createUser(normalUserDTO);
-        String normalUserToken = extractTokenFromUser(normalUserDTO.getUserName(), normalUserDTO.getPassword());
+        String normalUserToken = tokenExtractor.extractTokenFromUser(normalUserDTO.getUserName(), normalUserDTO.getPassword());
 
         CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
         categoryRequest.setCategoryName("CATEGORY 1");
@@ -266,7 +259,7 @@ class CategoryControllerTest extends TestContainersConfig {
         normalUserDTO.setPassword("SecurePass123!");
 
         authService.createUser(normalUserDTO);
-        String userToken = extractTokenFromUser(normalUserDTO.getUserName(),normalUserDTO.getPassword());
+        String userToken = tokenExtractor.extractTokenFromUser(normalUserDTO.getUserName(), normalUserDTO.getPassword());
 
         CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
         categoryRequest.setCategoryName("CATEGORY 1");

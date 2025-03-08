@@ -1,7 +1,6 @@
 package com.buyit.ecommerce.controller;
 
 import com.buyit.ecommerce.config.TestContainersConfig;
-import com.buyit.ecommerce.dto.request.UserLoginDTO;
 import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.dto.request.address.CreateAddressRequest;
 import com.buyit.ecommerce.dto.request.address.UpdateAddressRequest;
@@ -10,6 +9,7 @@ import com.buyit.ecommerce.entity.User;
 import com.buyit.ecommerce.repository.UsersRepository;
 import com.buyit.ecommerce.service.AuthService;
 import com.buyit.ecommerce.service.KeycloakService;
+import com.buyit.ecommerce.util.TokenExtractor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +19,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -59,6 +58,9 @@ class AddressControllerTest extends TestContainersConfig {
     @Autowired
     private UsersRepository usersRepository;
 
+    @Autowired
+    private TokenExtractor tokenExtractor;
+
     public String token;
 
     @BeforeEach()
@@ -73,7 +75,7 @@ class AddressControllerTest extends TestContainersConfig {
         userRegisterDTO.setPassword("SecurePass123!");
 
         authService.createUser(userRegisterDTO);
-        token = extractTokenFromUser(userRegisterDTO.getUserName(), userRegisterDTO.getPassword());
+        token = tokenExtractor.extractTokenFromUser(userRegisterDTO.getUserName(), userRegisterDTO.getPassword());
 
     }
 
@@ -85,16 +87,6 @@ class AddressControllerTest extends TestContainersConfig {
             keycloakService.deleteUserFromKeycloak(user.getKeycloakUserId());
         }
     }
-
-    private String extractTokenFromUser(String username, String password) throws JsonProcessingException {
-        UserLoginDTO userLoginDTO = new UserLoginDTO();
-        userLoginDTO.setUserName(username);
-        userLoginDTO.setPassword(password);
-
-        AccessTokenResponse response = authService.login(userLoginDTO);
-        return response.getToken();
-    }
-
 
     @Test
     @Transactional
@@ -349,7 +341,7 @@ class AddressControllerTest extends TestContainersConfig {
         secondUser.setPassword("SecurePass123!");
 
         authService.createUser(secondUser);
-        String secondUserToken = extractTokenFromUser(secondUser.getUserName(), secondUser.getPassword());
+        String secondUserToken = tokenExtractor.extractTokenFromUser(secondUser.getUserName(), secondUser.getPassword());
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
         addressRequest.setCity("CityTest");

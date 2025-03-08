@@ -63,8 +63,6 @@ class AuthControllerTest extends TestContainersConfig {
         userRegisterDTO.setEmail("testuser@example.com");
         userRegisterDTO.setUserName("testuser");
         userRegisterDTO.setPassword("SecurePass123!");
-
-
     }
 
     @AfterEach
