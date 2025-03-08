@@ -24,7 +24,7 @@ public class ProductRequest {
     private BigDecimal price;
 
     @JsonProperty("quantity")
-    private int quantity;
+    private Integer quantity;
 
 
 }
