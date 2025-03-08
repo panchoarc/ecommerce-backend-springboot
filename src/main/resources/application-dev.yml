@@ -11,7 +11,7 @@ spring:
     multipart:
       max-file-size: 2MB
       max-request-size: 20MB
-      enabled: on
+      enabled: true
 
   datasource:
     url: jdbc:postgresql://localhost:5432/ecommerce_db
@@ -27,7 +27,7 @@ spring:
           jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
 
   liquibase:
-    enabled: true
+    enabled: false
     change-log: classpath:/db/changelog/db.changelog-master.yaml
 
   application:
@@ -62,3 +62,15 @@ keycloak:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+
+aws:
+  s3:
+    bucket-name: test-bucket
+    endpoint: http://s3.localhost.localstack.cloud:4566
+    region: us-east-1
+    access-key: test
+    secret-key: test
+
+logging:
+  level:
+    org.springframework.http: debug
