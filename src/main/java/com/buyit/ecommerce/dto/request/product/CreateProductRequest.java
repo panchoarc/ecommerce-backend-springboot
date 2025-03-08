@@ -10,14 +10,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CreateProductRequest implements Serializable {
+public class CreateProductRequest {
 
     @NotBlank(message = "name cannot be blank")
     @JsonProperty("name")
@@ -28,13 +27,15 @@ public class CreateProductRequest implements Serializable {
     @JsonProperty("description")
     private String description;
 
+    @NotNull(message = "price cannot be null")
     @Positive(message = "price could not be lower than 0")
     @JsonProperty("price")
     private BigDecimal price;
 
-    @Positive(message = "quantity could not be lower than 0cvb ")
+    @NotNull(message = "quantity cannot be null")
+    @Positive(message = "quantity could not be lower than 0")
     @JsonProperty("quantity")
-    private int quantity;
+    private Integer quantity;
 
     @NotNull(message = "You need to add categories")
     @JsonProperty("category_ids")
