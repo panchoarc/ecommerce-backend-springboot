@@ -5,6 +5,7 @@ import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -12,7 +13,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
@@ -23,7 +23,6 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 
 
 @Slf4j
-@Testcontainers
 public class TestContainersConfig {
 
 
@@ -56,6 +55,14 @@ public class TestContainersConfig {
             .withExposedPorts(4566)
             .withServices(S3, SQS, DYNAMODB)
             .withReuse(true);
+
+
+    @BeforeAll
+    static void setupContainers() {
+        keycloakContainer.start();
+        localStackContainer.start();
+        postgreSQLContainer.start();
+    }
 
 
     @DynamicPropertySource
