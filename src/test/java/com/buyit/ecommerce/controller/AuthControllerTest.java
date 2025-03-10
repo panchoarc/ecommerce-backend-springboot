@@ -7,6 +7,7 @@ import com.buyit.ecommerce.entity.User;
 import com.buyit.ecommerce.repository.UsersRepository;
 import com.buyit.ecommerce.service.AuthService;
 import com.buyit.ecommerce.service.KeycloakService;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -148,9 +149,10 @@ class AuthControllerTest extends TestContainersConfig {
                 .andExpect(status().is3xxRedirection())
                 .andReturn();
 
-        String actualRedirectUrl = result.getResponse().getHeader("Location");
+        JsonNode rootNode = objectMapper.readTree(result.getResponse().getContentAsString());
+        JsonNode dataNode = rootNode.path("data");
 
-        assertNotNull(actualRedirectUrl);
-        assertEquals(actualRedirectUrl, expectedAuthUrl);
+        assertNotNull(dataNode.asText());
+        assertEquals(dataNode.asText(), expectedAuthUrl);
     }
 }
