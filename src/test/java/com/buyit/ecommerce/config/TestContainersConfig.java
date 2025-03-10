@@ -36,14 +36,15 @@ public class TestContainersConfig {
             .withDatabaseName("ecommerce")
             .withUsername("admin")
             .withPassword("admin")
-            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)));
+            .waitingFor(Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofMinutes(5)))
+            .withReuse(true);
 
 
     @Container
     static KeycloakContainer keycloakContainer = new KeycloakContainer(KEYCLOAK_IMAGE_VERSION)
             .withCopyToContainer(MountableFile.forClasspathResource("realm-export.json"), "/opt/keycloak/data/import/realm-export.json")
             .withExposedPorts(8080)
-            .waitingFor(Wait.forListeningPort().withStartupTimeout(Duration.ofMinutes(3)))
+            .waitingFor(Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofMinutes(5)))
             .withReuse(true)
             .withCreateContainerCmdModifier(cmd -> Objects.requireNonNull(cmd.getHostConfig()).withPortBindings(
                     new PortBinding(Ports.Binding.bindPort(8081), new ExposedPort(8080))
@@ -54,14 +55,15 @@ public class TestContainersConfig {
     static LocalStackContainer localStackContainer = new LocalStackContainer(DockerImageName.parse(LOCALSTACK_IMAGE_VERSION))
             .withExposedPorts(4566)
             .withServices(S3, SQS, DYNAMODB)
+            .waitingFor(Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofMinutes(5)))
             .withReuse(true);
 
 
     @BeforeAll
     static void setupContainers() {
-        keycloakContainer.start();
         localStackContainer.start();
         postgreSQLContainer.start();
+        keycloakContainer.start();
     }
 
 
