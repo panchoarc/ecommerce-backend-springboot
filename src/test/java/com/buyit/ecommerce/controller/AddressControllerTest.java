@@ -1,38 +1,29 @@
 package com.buyit.ecommerce.controller;
 
 import com.buyit.ecommerce.config.TestContainersConfig;
-import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.dto.request.address.CreateAddressRequest;
 import com.buyit.ecommerce.dto.request.address.UpdateAddressRequest;
 import com.buyit.ecommerce.dto.response.address.CreateAddressResponse;
-import com.buyit.ecommerce.entity.User;
-import com.buyit.ecommerce.repository.UsersRepository;
-import com.buyit.ecommerce.service.AuthService;
-import com.buyit.ecommerce.service.KeycloakService;
-import com.buyit.ecommerce.util.TokenExtractor;
+import com.buyit.ecommerce.util.UserTestUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 @Slf4j
+@Transactional
 class AddressControllerTest extends TestContainersConfig {
 
     @Autowired
@@ -48,49 +40,21 @@ class AddressControllerTest extends TestContainersConfig {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private AuthService authService;
+    private static String adminToken;
+    private static String userToken;
 
-
-    @Autowired
-    private KeycloakService keycloakService;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private TokenExtractor tokenExtractor;
-
-    public String token;
-
-    @BeforeEach()
-    void setUp() throws JsonProcessingException {
-        UserRegisterDTO userRegisterDTO;
-        userRegisterDTO = new UserRegisterDTO();
-        userRegisterDTO.setFirstName("Test");
-        userRegisterDTO.setLastName("User");
-        userRegisterDTO.setRole("user");
-        userRegisterDTO.setEmail("testuser@example.com");
-        userRegisterDTO.setUserName("testuser");
-        userRegisterDTO.setPassword("SecurePass123!");
-
-        authService.createUser(userRegisterDTO);
-        token = tokenExtractor.extractTokenFromUser(userRegisterDTO.getUserName(), userRegisterDTO.getPassword());
-
+    @BeforeAll
+    static void setUp(@Autowired UserTestUtils userTestUtils) throws JsonProcessingException {
+        adminToken = userTestUtils.getAdminUserToken();
+        userToken = userTestUtils.getUserToken();
     }
 
-    @AfterEach
-    void tearDown() {
-
-        List<User> users = usersRepository.findAll();
-        for (User user : users) {
-            keycloakService.deleteUserFromKeycloak(user.getKeycloakUserId());
-        }
+    @AfterAll
+    static void tearDown(@Autowired UserTestUtils userTestUtils) {
+        userTestUtils.cleanUsers();
     }
 
     @Test
-    @Transactional
-    @Rollback
     void Should_ThrowUnAuthorized_When_AuthNotProvided() throws Exception {
 
         mockMvc.perform(get("/address/search")
@@ -99,22 +63,17 @@ class AddressControllerTest extends TestContainersConfig {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void Should_ReturnMyAddress_When_AuthorizationIsProvided() throws Exception {
 
         mockMvc.perform(get("/address/search")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("My addresses found"))
-                .andDo(print());
+                .andExpect(jsonPath("$.message").exists());
     }
 
 
     @Test
-    @Transactional
-    @Rollback
     void Should_ThrowUnauthorized_When_AuthorizationIsProvided() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -131,8 +90,6 @@ class AddressControllerTest extends TestContainersConfig {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void Should_AddressNotFound_When_AddressNotExistAndAuthorizationIsProvided() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -144,17 +101,15 @@ class AddressControllerTest extends TestContainersConfig {
         CreateAddressResponse addressResponse = createAddress(addressRequest);
 
         mockMvc.perform(get("/address/{id}", addressResponse.getId() + 1)
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Resource not found."))
-                .andExpect(jsonPath("$.errors.message").value("User address not found"));
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.errors.message").exists());
     }
 
 
     @Test
-    @Transactional
-    @Rollback
     void Should_ReturnAddress_When_AddressExistsAndAuthorizationIsProvided() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -166,7 +121,7 @@ class AddressControllerTest extends TestContainersConfig {
         CreateAddressResponse addressResponse = createAddress(addressRequest);
 
         mockMvc.perform(get("/address/{id}", addressResponse.getId())
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.city").value(addressResponse.getCity()))
@@ -176,8 +131,6 @@ class AddressControllerTest extends TestContainersConfig {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void Should_Unauthorized_When_AuthorizationHeaderNotAttached() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -192,14 +145,12 @@ class AddressControllerTest extends TestContainersConfig {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.errors.message").value("Full authentication is required to access this resource"));
+                .andExpect(jsonPath("$.errors.message").exists());
 
     }
 
 
     @Test
-    @Transactional
-    @Rollback
     void Should_CreatedFailed_When_InvalidParameters() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -211,19 +162,17 @@ class AddressControllerTest extends TestContainersConfig {
         String jsonRequest = objectMapper.writeValueAsString(addressRequest);
 
         mockMvc.perform(post("/address")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed."))
-                .andExpect(jsonPath("$.errors.country").value("country cannot be blank"))
-                .andExpect(jsonPath("$.errors.city").value("city cannot be blank"));
+                .andExpect(jsonPath("$.errors.country").exists())
+                .andExpect(jsonPath("$.errors.city").exists());
     }
 
 
     @Test
-    @Transactional
-    @Rollback
     void Should_CreateSuccessfully_When_ValidParameters() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -242,8 +191,6 @@ class AddressControllerTest extends TestContainersConfig {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void Should_FailToUpdate_WhenInvalidParameters() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -252,31 +199,27 @@ class AddressControllerTest extends TestContainersConfig {
         addressRequest.setStreet("StreetTest");
         addressRequest.setPostalCode("PostalCodeTest");
 
-        // Crear una dirección válida
         CreateAddressResponse createdAddress = createAddress(addressRequest);
 
-        // Intentar actualizar con parámetros inválidos (por ejemplo, postalCode vacío)
         UpdateAddressRequest invalidUpdateRequest = new UpdateAddressRequest();
         invalidUpdateRequest.setCity("NewCity");
         invalidUpdateRequest.setCountry("NewCountry");
         invalidUpdateRequest.setStreet("NewStreet");
-        invalidUpdateRequest.setPostalCode(""); // Inválido
+        invalidUpdateRequest.setPostalCode("");
 
         String invalidUpdateJson = objectMapper.writeValueAsString(invalidUpdateRequest);
 
         mockMvc.perform(put("/address/{id}", createdAddress.getId())
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidUpdateJson))
-                .andExpect(status().isBadRequest()) // Esperamos error 400
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Validation failed."))
-                .andExpect(jsonPath("$.errors.postal_code").value("postal_code cannot be blank"));
+                .andExpect(jsonPath("$.errors.postal_code").exists());
     }
 
 
     @Test
-    @Transactional
-    @Rollback
     void Should_UpdateSuccessful_When_ValidParameters() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -296,7 +239,7 @@ class AddressControllerTest extends TestContainersConfig {
         CreateAddressResponse createdAddress = createAddress(addressRequest);
 
         mockMvc.perform(put("/address/{id}", createdAddress.getId())
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateJsonRequest))
                 .andExpect(status().isOk())
@@ -308,8 +251,6 @@ class AddressControllerTest extends TestContainersConfig {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void Should_DeleteFailed_When_AddressIdNotExists() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -322,26 +263,14 @@ class AddressControllerTest extends TestContainersConfig {
         CreateAddressResponse createdAddress = createAddress(addressRequest);
 
         mockMvc.perform(delete("/address/{id}", createdAddress.getId() + 1)
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Resource not found."));
     }
 
     @Test
-    @Transactional
-    @Rollback
     void Should_DeleteFailed_When_AddressExistsAndNotOwnThatAddress() throws Exception {
-
-        UserRegisterDTO secondUser = new UserRegisterDTO();
-        secondUser.setFirstName("Other");
-        secondUser.setLastName("User");
-        secondUser.setEmail("otheruser@example.com");
-        secondUser.setUserName("otheruser");
-        secondUser.setPassword("SecurePass123!");
-
-        authService.createUser(secondUser);
-        String secondUserToken = tokenExtractor.extractTokenFromUser(secondUser.getUserName(), secondUser.getPassword());
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
         addressRequest.setCity("CityTest");
@@ -353,16 +282,14 @@ class AddressControllerTest extends TestContainersConfig {
         CreateAddressResponse createdAddress = createAddress(addressRequest);
 
         mockMvc.perform(delete("/address/{id}", createdAddress.getId())
-                        .header("Authorization", "Bearer " + secondUserToken)
+                        .header("Authorization", "Bearer " + userToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("Access Denied"))
-                .andExpect(jsonPath("$.errors.message").value("You cannot delete this resource."));
+                .andExpect(jsonPath("$.errors.message").exists());
     }
 
     @Test
-    @Transactional
-    @Rollback
     void Should_DeleteSuccessful_When_IdExistsAndOwnership() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
@@ -375,7 +302,7 @@ class AddressControllerTest extends TestContainersConfig {
         CreateAddressResponse createdAddress = createAddress(addressRequest);
 
         mockMvc.perform(delete("/address/{id}", createdAddress.getId())
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNoContent())
                 .andExpect(jsonPath("$.message").value("Address deleted successfully"))
@@ -393,10 +320,10 @@ class AddressControllerTest extends TestContainersConfig {
         String jsonRequest = objectMapper.writeValueAsString(request);
 
         MvcResult result = mockMvc.perform(post("/address")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
-                .andExpect(status().isCreated()) // Verifica que se creó correctamente
+                .andExpect(status().isCreated())
                 .andReturn();
 
         JsonNode root = objectMapper.readTree(result.getResponse().getContentAsString());

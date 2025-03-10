@@ -1,25 +1,20 @@
 package com.buyit.ecommerce.controller;
 
 import com.buyit.ecommerce.config.TestContainersConfig;
-import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.dto.request.category.CategoryRequest;
 import com.buyit.ecommerce.dto.request.product.CreateProductRequest;
 import com.buyit.ecommerce.dto.request.product.ProductRequest;
 import com.buyit.ecommerce.dto.response.category.CategoryResponse;
 import com.buyit.ecommerce.dto.response.product.CreateProductResponse;
-import com.buyit.ecommerce.entity.User;
-import com.buyit.ecommerce.repository.UsersRepository;
-import com.buyit.ecommerce.service.AuthService;
-import com.buyit.ecommerce.service.KeycloakService;
-import com.buyit.ecommerce.util.TokenExtractor;
+import com.buyit.ecommerce.util.UserTestUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +22,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -46,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 @Slf4j
+@Transactional
 class ProductControllerTest extends TestContainersConfig {
 
     @Autowired
@@ -54,48 +49,21 @@ class ProductControllerTest extends TestContainersConfig {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private AuthService authService;
+    private static String adminToken;
+    private static String userToken;
 
-    @Autowired
-    private KeycloakService keycloakService;
-
-    @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private TokenExtractor tokenExtractor;
-
-    public String token;
-
-    @BeforeEach()
-    void setUp() throws JsonProcessingException {
-        UserRegisterDTO adminUserDTO = new UserRegisterDTO();
-        adminUserDTO.setFirstName("Test");
-        adminUserDTO.setLastName("User");
-        adminUserDTO.setRole("user");
-        adminUserDTO.setEmail("testuser@example.com");
-        adminUserDTO.setUserName("testuser");
-        adminUserDTO.setPassword("SecurePass123!");
-        adminUserDTO.setRole("admin");
-
-        authService.createUser(adminUserDTO);
-        token = tokenExtractor.extractTokenFromUser(adminUserDTO.getUserName(), adminUserDTO.getPassword());
-
+    @BeforeAll
+    static void setUp(@Autowired UserTestUtils userTestUtils) throws JsonProcessingException {
+        adminToken = userTestUtils.getAdminUserToken();
+        userToken = userTestUtils.getUserToken();
     }
 
-    @AfterEach
-    void tearDown() {
-
-        List<User> users = usersRepository.findAll();
-        for (User user : users) {
-            keycloakService.deleteUserFromKeycloak(user.getKeycloakUserId());
-        }
+    @AfterAll
+    static void tearDown(@Autowired UserTestUtils userTestUtils) {
+        userTestUtils.cleanUsers();
     }
 
     @Test
-    @Transactional
-    @Rollback
     void givenNoToken_whenGetProducts_thenUnauthorized() throws Exception {
 
         mockMvc.perform(post("/products/search")
@@ -104,8 +72,6 @@ class ProductControllerTest extends TestContainersConfig {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void givenValidCredentials_whenGetProducts_thenReturnCategories() throws Exception {
 
         ProductRequest productRequest = new ProductRequest();
@@ -113,7 +79,7 @@ class ProductControllerTest extends TestContainersConfig {
         String productJson = objectMapper.writeValueAsString(productRequest);
 
         mockMvc.perform(post("/products/search")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(productJson))
                 .andExpect(status().isOk())
@@ -122,8 +88,6 @@ class ProductControllerTest extends TestContainersConfig {
 
 
     @Test
-    @Transactional
-    @Rollback
     void givenTokenAndInvalidRequest_whenCreateProduct_thenReturnValidationError() throws Exception {
 
         CreateProductRequest productRequest = new CreateProductRequest();
@@ -135,7 +99,7 @@ class ProductControllerTest extends TestContainersConfig {
         String productJson = objectMapper.writeValueAsString(productRequest);
 
         mockMvc.perform(post("/products")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(productJson))
                 .andExpect(status().isBadRequest())
@@ -147,8 +111,6 @@ class ProductControllerTest extends TestContainersConfig {
     }
 
     @Test
-    @Transactional
-    @Rollback
     void givenTokenAndValidRequest_whenCreateProduct_thenReturnCreatedProduct() throws Exception {
 
         CategoryRequest categoryRequest = new CategoryRequest();
@@ -158,7 +120,7 @@ class ProductControllerTest extends TestContainersConfig {
         MvcResult categoryResult = mockMvc.perform(post("/category/search")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(categoryJson)
-                        .header("Authorization", "Bearer " + token))
+                        .header("Authorization", "Bearer " + adminToken))
                 .andReturn();
 
         JsonNode rootNode = objectMapper.readTree(categoryResult.getResponse().getContentAsString());
@@ -183,7 +145,7 @@ class ProductControllerTest extends TestContainersConfig {
         String productJson = objectMapper.writeValueAsString(productRequest);
 
         MvcResult productCreated = mockMvc.perform(post("/products")
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(productJson))
                 .andExpect(status().isCreated())
@@ -199,7 +161,7 @@ class ProductControllerTest extends TestContainersConfig {
 
         mockMvc.perform(multipart("/products/{id}/images", productResponse.getId())
                         .file(file)
-                        .header("Authorization", "Bearer " + token)
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.MULTIPART_FORM_DATA)
                 )
                 .andExpect(status().isCreated())

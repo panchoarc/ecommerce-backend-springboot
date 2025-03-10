@@ -29,7 +29,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop  # Usa 'create', 'update' o 'validate' según tus necesidades para pruebas
+      ddl-auto: create  # Usa 'create', 'update' o 'validate' según tus necesidades para pruebas
     properties:
       hibernate:
         format_sql: false
