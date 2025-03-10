@@ -7,17 +7,13 @@ import com.buyit.ecommerce.util.ApiResponse;
 import com.buyit.ecommerce.util.ResponseBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 
-@Slf4j
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
@@ -40,11 +36,12 @@ public class AuthController {
     }
 
     @GetMapping("/provider/{provider}")
-    public void loginWithProvider(@PathVariable String provider, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @ResponseStatus(HttpStatus.FOUND)
+    public ApiResponse<String> loginWithProvider(@PathVariable String provider, HttpServletRequest request) {
         String redirectUri = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + "/api/auth/callback";
 
         String authUrl = authService.loginWithProvider(provider, redirectUri);
-        response.sendRedirect(authUrl);
+        return ResponseBuilder.success("URL", authUrl);
     }
 
     @GetMapping("/callback")
