@@ -1,5 +1,6 @@
 package com.buyit.ecommerce.controller;
 
+import com.buyit.ecommerce.anotations.ValidImage;
 import com.buyit.ecommerce.dto.request.product.CreateProductRequest;
 import com.buyit.ecommerce.dto.request.product.ProductRequest;
 import com.buyit.ecommerce.dto.request.product.UpdateProductRequest;
@@ -77,7 +78,7 @@ public class ProductController {
     @PostMapping(value = "/{id}/images")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<Void> addImagesToProduct(@PathVariable("id") Long id,
-                                                @Valid @RequestPart("images") MultipartFile[] images) throws IOException {
+                                                @Valid @ValidImage @RequestPart("images") List<MultipartFile> images) throws IOException {
         return productImageService.uploadProductImage(images, id);
     }
 
@@ -85,6 +86,12 @@ public class ProductController {
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<List<ProductImagesResponse>> getProductImages(@PathVariable("id") Long id) {
         return productImageService.getProductImages(id);
+    }
+
+    @DeleteMapping(value = "/{id}/images/{imgId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void delete(@PathVariable("id") Long productId ,@PathVariable("imgId") Long idImage) {
+        productImageService.deleteProductImage(productId,idImage);
     }
 
 

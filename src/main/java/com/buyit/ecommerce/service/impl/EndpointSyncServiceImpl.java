@@ -45,14 +45,16 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
                 String[] parts = routeKey.split(" ", 2);
                 String method = parts[0];
                 String path = parts[1];
-                String basePath = extractBasePath(path);
+                Map<String, String> pathParts = extractPathParts(path);
                 Endpoint existingEndpoint = existingEndpoints.get(routeKey);
 
                 if (existingEndpoint != null) {
                     updateEndpointIfNeeded(existingEndpoint, method, path, toUpdate);
                 } else {
                     Optional<Endpoint> possibleMatch = existingEndpointsById.values().stream()
-                            .filter(e -> e.getHttpMethod().equals(method) && e.getBasePath().contains(basePath))
+                            .filter(e -> e.getHttpMethod().equals(method) &&
+                                    e.getBasePath().equals(pathParts.get("basePath")) &&
+                                    e.getDynamicPath().equals(pathParts.get("dynamicPath")))
                             .findFirst();
 
                     if (possibleMatch.isPresent()) {
@@ -82,6 +84,8 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
 
     private void updateEndpointIfNeeded(Endpoint endpoint, String method, String path, List<Endpoint> toUpdate) {
         boolean needsUpdate = false;
+
+        Map<String, String> pathParts = extractPathParts(path);
         if (!endpoint.getHttpMethod().equals(method)) {
             endpoint.setHttpMethod(method);
             needsUpdate = true;
@@ -90,12 +94,12 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
             endpoint.setUrl(path);
             needsUpdate = true;
         }
-        String basePath = extractBasePath(path);
+        String basePath = pathParts.get("basePath");
         if (!endpoint.getBasePath().equals(basePath)) {
             endpoint.setBasePath(basePath);
             needsUpdate = true;
         }
-        String dynamicPath = extractDynamicPath(path);
+        String dynamicPath = pathParts.get("dynamicPath");
         if (!Objects.equals(endpoint.getDynamicPath(), dynamicPath)) {
             endpoint.setDynamicPath(dynamicPath);
             needsUpdate = true;
@@ -106,11 +110,13 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
     }
 
     private void createNewEndpoint(String method, String path, List<Endpoint> newEndpoints) {
+
+        Map<String, String> pathParts = extractPathParts(path);
         Endpoint newEndpoint = new Endpoint();
         newEndpoint.setHttpMethod(method);
         newEndpoint.setUrl(path);
-        newEndpoint.setBasePath(extractBasePath(path));
-        newEndpoint.setDynamicPath(extractDynamicPath(path));
+        newEndpoint.setBasePath(pathParts.get("basePath"));
+        newEndpoint.setDynamicPath(pathParts.get("dynamicPath"));
         newEndpoint.setIsActive(true);
         newEndpoint.setIsPublic(false);
         newEndpoints.add(newEndpoint);
@@ -155,13 +161,17 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
         return currentRoutes;
     }
 
-    private String extractBasePath(String url) {
-        return url.contains("{") ? url.substring(0, url.indexOf("{")) : url;
+    private Map<String, String> extractPathParts(String url) {
+        String[] parts = url.split("/");
+        String basePath = parts.length > 1 ? '/' + parts[1] : url;
+        String dynamicPath = parts.length > 2 ? String.join("/", Arrays.copyOfRange(parts, 2, parts.length)) : "";
+
+        Map<String, String> result = new HashMap<>();
+        result.put("basePath", basePath);
+        result.put("dynamicPath", dynamicPath);
+        return result;
     }
 
-    private String extractDynamicPath(String url) {
-        return url.contains("{") ? url.substring(url.indexOf("{")) : null;
-    }
 
     private boolean isPublicRoute(String url) {
         return PUBLIC_ROUTES.stream().anyMatch(publicRoute -> url.matches(convertToRegex(publicRoute)));

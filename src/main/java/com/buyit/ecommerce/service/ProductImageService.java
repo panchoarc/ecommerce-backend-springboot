@@ -10,8 +10,11 @@ import java.util.List;
 
 public interface ProductImageService {
 
-    ApiResponse<Void> uploadProductImage(MultipartFile[] files, Long productId) throws IOException;
+    ApiResponse<Void> uploadProductImage(List<MultipartFile> files, Long productId) throws IOException;
 
     ApiResponse<List<ProductImagesResponse>> getProductImages(Long id);
+
+
+    void deleteProductImage(Long productId, Long imageId);
 
 }

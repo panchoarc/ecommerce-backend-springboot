@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.util.List;
@@ -39,13 +39,11 @@ public class ProductImageServiceImpl implements ProductImageService {
     private final ProductImagesMapper productImagesMapper;
 
     @Override
-    public ApiResponse<Void> uploadProductImage(MultipartFile[] files, Long productId) {
+    public ApiResponse<Void> uploadProductImage(List<MultipartFile> files, Long productId) {
         Optional<Product> product = productRepository.findById(productId);
         if (product.isEmpty()) {
             throw new ResourceNotFoundException("Product Not Found");
         }
-
-        ensureBucketExists();
 
         for (MultipartFile file : files) {
             String imageName = generateUniqueImageName(productId, Objects.requireNonNull(file.getOriginalFilename()));
@@ -91,15 +89,37 @@ public class ProductImageServiceImpl implements ProductImageService {
         return ResponseBuilder.success("Images retrieved successfully", response);
     }
 
-    private void ensureBucketExists() {
-        try {
-            s3Client.headBucket(request -> request.bucket(bucketName));
-        } catch (Exception e) {
-            log.info("Exception while checking if bucket exists: {}", e.getMessage());
-            log.info("Bucket does not exist, creating: {}", bucketName);
-            s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
+    @Override
+    public void deleteProductImage(Long productId, Long imageId) {
+
+        Optional<Product> product = productRepository.findById(productId);
+        if (product.isEmpty()) {
+            throw new ResourceNotFoundException("Product Not Found");
         }
+
+        Optional<ProductImage> existProductImage = productImageRepository.findByIdAndProductId(imageId, productId);
+
+        if (existProductImage.isEmpty()) {
+            throw new ResourceNotFoundException("Cannot delete image");
+        }
+
+        ProductImage productImage = existProductImage.get();
+
+        String[] parts = productImage.getUrl().split("/");
+
+        String key = parts[parts.length - 1];
+
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest
+                .builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        s3Client.deleteObject(deleteObjectRequest);
+        productImageRepository.delete(productImage);
+
     }
+
 
     private String generateUniqueImageName(Long productId, String imageName) {
         String extension = imageName.contains(".") ? imageName.substring(imageName.lastIndexOf(".")) : "";
