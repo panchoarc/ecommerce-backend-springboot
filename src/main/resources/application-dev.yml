@@ -65,11 +65,10 @@ springdoc:
 
 aws:
   s3:
-    bucket-name: test-bucket
-    endpoint: http://s3.localhost.localstack.cloud:4566
+    useLocalStack: true
+    bucket-name: ecommerce-buyit-bucket
+    localstackEndpoint: http://s3.localhost.localstack.cloud:4566
     region: us-east-1
-    access-key: test
-    secret-key: test
 
 logging:
   level:

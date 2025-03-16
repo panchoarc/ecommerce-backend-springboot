@@ -3,49 +3,45 @@ package com.buyit.ecommerce.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3ClientBuilder;
 
 import java.net.URI;
 
 @Configuration
 public class AwsConfig {
 
-    @Value("${aws.s3.endpoint:}")
-    private String endpoint;
+    @Value("${aws.s3.localstackEndpoint:}")
+    private String localStackEndpoint;
 
     @Value("${aws.s3.region}")
     private String region;
 
-    @Value("${aws.s3.access-key}")
-    private String accessKey;
-
-    @Value("${aws.s3.secret-key}")
-    private String secretKey;
+    @Value("${aws.s3.useLocalStack:false}")
+    private boolean useLocalStack;
 
 
     @Bean
     public S3Client s3Client() {
-        S3ClientBuilder s3ClientBuilder = S3Client.builder();
-        s3ClientBuilder.credentialsProvider(credentialsProvider());
-        s3ClientBuilder.region(Region.of(region));
-
-
-        if (endpoint != null && !endpoint.isEmpty()) {
-            s3ClientBuilder.endpointOverride(URI.create(endpoint));
+        if (useLocalStack) {
+            return S3Client.builder()
+                    .region(Region.of(region))
+                    .endpointOverride(URI.create(localStackEndpoint)) // Conexión a LocalStack
+                    .credentialsProvider(credentialsProvider())
+                    .build();
+        } else {
+            return S3Client.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(credentialsProvider()) // Usa credenciales de AWS reales
+                    .build();
         }
-
-        return s3ClientBuilder.build();
     }
 
     @Bean
-    public StaticCredentialsProvider credentialsProvider() {
+    public AwsCredentialsProvider credentialsProvider() {
 
-        AwsBasicCredentials awsBasicCredentials = AwsBasicCredentials.create(accessKey, secretKey);
-
-        return StaticCredentialsProvider.create(awsBasicCredentials);
+        return DefaultCredentialsProvider.create();
     }
 }
