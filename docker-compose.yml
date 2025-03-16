@@ -34,12 +34,15 @@ services:
       - SERVICES=s3,sqs,dynamodb
       - AWS_ACCESS_KEY_ID=test
       - AWS_SECRET_ACCESS_KEY=test
+      - PERSISTENCE=1
     ports:
       - "4566:4566"            # LocalStack Gateway
       - "4510-4559:4510-4559"  # external services port range
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "localstack_data:/var/lib/localstack"
+      - "./localstack/scripts/config-aws.sh:/etc/localstack/init/ready.d/config-aws.sh:ro"
+      - "./localstack/scripts/create-bucket.sh:/etc/localstack/init/ready.d/create-bucket.sh:ro"
     restart: unless-stopped
 
 networks:
