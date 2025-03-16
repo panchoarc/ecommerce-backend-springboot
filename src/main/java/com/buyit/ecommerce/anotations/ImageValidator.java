@@ -2,38 +2,42 @@ package com.buyit.ecommerce.anotations;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
-@Slf4j
-public class ImageValidator implements ConstraintValidator<ValidImage, MultipartFile[]> {
+import java.util.List;
+
+public class ImageValidator implements ConstraintValidator<ValidImage, List<MultipartFile>> {
+
+
+    private static final String[] ALLOWED_FORMATS = {"image/jpeg", "image/png", "image/gif"};
 
     @Override
-    public boolean isValid(MultipartFile[] files, ConstraintValidatorContext context) {
+    public boolean isValid(List<MultipartFile> files, ConstraintValidatorContext context) {
 
-        // Si el array de archivos es nulo o vacío, se considera válido (podría ser opcional)
         if (files == null) {
             return true;
         }
 
-        // Verificar cada archivo en el array
         for (MultipartFile file : files) {
             if (file == null || file.isEmpty()) {
-                return false; // Si hay algún archivo vacío, no es válido
+                return false;
             }
 
             String mimeType = file.getContentType();
-            if (mimeType == null || !mimeType.startsWith("image/")) {
-                return false; // Si el archivo no es una imagen, no es válido
+            if (mimeType == null || !isAllowedFormat(mimeType)) {
+                return false;
             }
         }
 
-        return true; // Todos los archivos son válidos
+        return true;
     }
 
-    @Override
-    public void initialize(ValidImage constraintAnnotation) {
-        ConstraintValidator.super.initialize(constraintAnnotation);
+    private boolean isAllowedFormat(String mimeType) {
+        for (String format : ALLOWED_FORMATS) {
+            if (mimeType.equals(format)) {
+                return true;
+            }
+        }
+        return false;
     }
-
 }
