@@ -20,6 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -156,7 +158,9 @@ class ProductControllerTest extends TestContainersConfig {
 
         CreateProductResponse productResponse = objectMapper.readValue(dataX.traverse(), CreateProductResponse.class);
 
-        File img = new File("src/test/resources/foto1.jpg");
+
+        Resource resource = new ClassPathResource("foto1.jpg");
+        File img = resource.getFile(); // Cargar archivo correctamente
         MockMultipartFile file = new MockMultipartFile("images", img.getName(), MediaType.IMAGE_JPEG_VALUE, new FileInputStream(img));
 
         mockMvc.perform(multipart("/products/{id}/images", productResponse.getId())
