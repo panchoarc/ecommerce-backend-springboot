@@ -9,6 +9,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -60,8 +62,7 @@ public class DatabaseServiceImpl implements DatabaseService {
 
         try {
             File backupDir = new File(backupPath);
-            if (!backupDir.exists() || !backupDir.isDirectory()) {
-                log.warn("La carpeta de backups no existe o no es un directorio: {}", backupPath);
+            if (!isValidBackupDirectory(backupDir)) {
                 return;
             }
 
@@ -73,28 +74,51 @@ public class DatabaseServiceImpl implements DatabaseService {
 
             LocalDateTime now = LocalDateTime.now();
             for (File file : files) {
-                try {
-                    if (file.isFile() && file.getName().endsWith(".sql")) {
-                        LocalDateTime fileTime = LocalDateTime.ofInstant(
-                                Instant.ofEpochMilli(file.lastModified()), java.time.ZoneId.systemDefault());
-
-                        long daysBetween = ChronoUnit.DAYS.between(fileTime, now);
-                        log.info("Revisando archivo: {} ({} días de antigüedad)", file.getName(), daysBetween);
-
-                        if (daysBetween >= RETENTION_DAYS) {
-                            if (file.delete()) {
-                                log.info("Backup eliminado: {}", file.getName());
-                            } else {
-                                log.error("No se pudo eliminar el backup: {}", file.getName());
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    log.error("Error al procesar el archivo: {}", file.getName(), e);
-                }
+                processBackupFile(file, now);
             }
         } catch (Exception e) {
             log.error("Error general al ejecutar la eliminación de backups", e);
+        }
+    }
+
+    private boolean isValidBackupDirectory(File backupDir) {
+        if (!backupDir.exists() || !backupDir.isDirectory()) {
+            log.warn("La carpeta de backups no existe o no es un directorio: {}", backupPath);
+            return false;
+        }
+        return true;
+    }
+
+    private void processBackupFile(File file, LocalDateTime now) {
+        if (!file.isFile() || !file.getName().endsWith(".sql")) {
+            return;
+        }
+
+        try {
+            long daysBetween = calculateFileAgeInDays(file, now);
+            log.info("Revisando archivo: {} ({} días de antigüedad)", file.getName(), daysBetween);
+
+            if (daysBetween >= RETENTION_DAYS) {
+                deleteBackupFile(file);
+            }
+        } catch (Exception e) {
+            log.error("Error al procesar el archivo: {}", file.getName(), e);
+        }
+    }
+
+    private long calculateFileAgeInDays(File file, LocalDateTime now) {
+        LocalDateTime fileTime = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(file.lastModified()), java.time.ZoneId.systemDefault());
+        return ChronoUnit.DAYS.between(fileTime, now);
+    }
+
+    private void deleteBackupFile(File file) {
+        try {
+            Path filePath = file.toPath();
+            Files.delete(filePath);
+            log.info("Backup eliminado: {}", file.getName());
+        } catch (IOException e) {
+            log.error("No se pudo eliminar el backup: {}", file.getName(), e);
         }
     }
 

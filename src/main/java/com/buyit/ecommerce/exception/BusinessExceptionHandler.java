@@ -19,11 +19,13 @@ import java.util.Map;
 @Order(3)
 public class BusinessExceptionHandler {
 
+    private static final String MESSAGE = "message";
+
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiResponse<Void> handleResourceNotFoundException(ResourceNotFoundException ex) {
         Map<String, String> errors = new HashMap<>();
-        errors.put("message", ex.getMessage());
+        errors.put(MESSAGE, ex.getMessage());
         return ResponseBuilder.error("Resource not found.", errors);
     }
 
@@ -31,7 +33,7 @@ public class BusinessExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public ApiResponse<Void> handleResourceExistException(ResourceExistException ex) {
         Map<String, String> errors = new HashMap<>();
-        errors.put("message", ex.getMessage());
+        errors.put(MESSAGE, ex.getMessage());
         return ResponseBuilder.error("Resource already exists.", errors);
     }
 
@@ -39,7 +41,7 @@ public class BusinessExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleResourceIllegalState(ResourceIllegalState ex) {
         Map<String, String> errors = new HashMap<>();
-        errors.put("message", ex.getMessage());
+        errors.put(MESSAGE, ex.getMessage());
         return ResponseBuilder.error("Illegal State.", errors);
     }
 
@@ -47,7 +49,7 @@ public class BusinessExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiResponse<Void> handleInsufficientQuantityException(InsufficientQuantityException ex) {
         Map<String, String> errors = new HashMap<>();
-        errors.put("message", ex.getMessage());
+        errors.put(MESSAGE, ex.getMessage());
 
         return ResponseBuilder.error("Insufficient quantity.", errors);
     }

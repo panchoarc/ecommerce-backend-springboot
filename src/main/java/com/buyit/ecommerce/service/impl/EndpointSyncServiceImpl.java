@@ -20,6 +20,9 @@ import static com.buyit.ecommerce.constants.SecurityConstants.PUBLIC_ROUTES;
 @Slf4j
 public class EndpointSyncServiceImpl implements EndpointSyncService {
 
+    private static final String BASE_PATH_KEY = "basePath";
+    private static final String DYNAMIC_PATH_KEY = "dynamicPath";
+
     private final EndpointRepository endpointRepository;
 
     @Override
@@ -32,6 +35,15 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
         Map<Long, Endpoint> existingEndpointsById = existingEndpoints.values().stream()
                 .collect(Collectors.toMap(Endpoint::getId, e -> e));
 
+        handleObsoleteEndpoints(existingEndpoints, currentRoutes, toDeactivate, toUpdate);
+        handleCurrentRoutes(currentRoutes, existingEndpoints, existingEndpointsById, newEndpoints, toUpdate);
+
+        saveNewEndpoints(newEndpoints);
+        updateExistingEndpoints(toUpdate);
+        deactivateObsoleteEndpoints(toDeactivate);
+    }
+
+    private void handleObsoleteEndpoints(Map<String, Endpoint> existingEndpoints, Set<String> currentRoutes, List<Endpoint> toDeactivate, List<Endpoint> toUpdate) {
         existingEndpoints.forEach((key, endpoint) -> {
             if (!currentRoutes.contains(key) && Boolean.TRUE.equals(endpoint.getIsActive())) {
                 deactivateEndpoint(endpoint, toDeactivate);
@@ -39,7 +51,9 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
                 reactivateEndpoint(endpoint, toUpdate);
             }
         });
+    }
 
+    private void handleCurrentRoutes(Set<String> currentRoutes, Map<String, Endpoint> existingEndpoints, Map<Long, Endpoint> existingEndpointsById, List<Endpoint> newEndpoints, List<Endpoint> toUpdate) {
         currentRoutes.forEach(routeKey -> {
             if (!isPublicRoute(routeKey)) {
                 String[] parts = routeKey.split(" ", 2);
@@ -51,41 +65,31 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
                 if (existingEndpoint != null) {
                     updateEndpointIfNeeded(existingEndpoint, method, path, toUpdate);
                 } else {
-                    Optional<Endpoint> possibleMatch = existingEndpointsById.values().stream()
-                            .filter(e -> e.getHttpMethod().equals(method) &&
-                                    e.getBasePath().equals(pathParts.get("basePath")) &&
-                                    e.getDynamicPath().equals(pathParts.get("dynamicPath")))
-                            .findFirst();
-
-                    if (possibleMatch.isPresent()) {
-                        Endpoint matchedEndpoint = possibleMatch.get();
-                        updateEndpointIfNeeded(matchedEndpoint, method, path, toUpdate);
-                    } else {
-                        createNewEndpoint(method, path, newEndpoints);
-                    }
+                    findMatchingEndpoint(existingEndpointsById, method, pathParts, newEndpoints, toUpdate);
                 }
             }
         });
-
-        saveNewEndpoints(newEndpoints);
-        updateExistingEndpoints(toUpdate);
-        deactivateObsoleteEndpoints(toDeactivate);
     }
 
-    private void deactivateEndpoint(Endpoint endpoint, List<Endpoint> toDeactivate) {
-        endpoint.setIsActive(false);
-        toDeactivate.add(endpoint);
-    }
+    private void findMatchingEndpoint(Map<Long, Endpoint> existingEndpointsById, String method, Map<String, String> pathParts, List<Endpoint> newEndpoints, List<Endpoint> toUpdate) {
+        Optional<Endpoint> possibleMatch = existingEndpointsById.values().stream()
+                .filter(e -> e.getHttpMethod().equals(method) &&
+                        e.getBasePath().equals(pathParts.get(BASE_PATH_KEY)) &&
+                        e.getDynamicPath().equals(pathParts.get(DYNAMIC_PATH_KEY)))
+                .findFirst();
 
-    private void reactivateEndpoint(Endpoint endpoint, List<Endpoint> toUpdate) {
-        endpoint.setIsActive(true);
-        toUpdate.add(endpoint);
+        if (possibleMatch.isPresent()) {
+            Endpoint matchedEndpoint = possibleMatch.get();
+            updateEndpointIfNeeded(matchedEndpoint, method, pathParts.get(BASE_PATH_KEY) + "/" + pathParts.get(DYNAMIC_PATH_KEY), toUpdate);
+        } else {
+            createNewEndpoint(method, pathParts, newEndpoints);
+        }
     }
 
     private void updateEndpointIfNeeded(Endpoint endpoint, String method, String path, List<Endpoint> toUpdate) {
         boolean needsUpdate = false;
-
         Map<String, String> pathParts = extractPathParts(path);
+
         if (!endpoint.getHttpMethod().equals(method)) {
             endpoint.setHttpMethod(method);
             needsUpdate = true;
@@ -94,29 +98,26 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
             endpoint.setUrl(path);
             needsUpdate = true;
         }
-        String basePath = pathParts.get("basePath");
-        if (!endpoint.getBasePath().equals(basePath)) {
-            endpoint.setBasePath(basePath);
+        if (!endpoint.getBasePath().equals(pathParts.get(BASE_PATH_KEY))) {
+            endpoint.setBasePath(pathParts.get(BASE_PATH_KEY));
             needsUpdate = true;
         }
-        String dynamicPath = pathParts.get("dynamicPath");
-        if (!Objects.equals(endpoint.getDynamicPath(), dynamicPath)) {
-            endpoint.setDynamicPath(dynamicPath);
+        if (!Objects.equals(endpoint.getDynamicPath(), pathParts.get(DYNAMIC_PATH_KEY))) {
+            endpoint.setDynamicPath(pathParts.get(DYNAMIC_PATH_KEY));
             needsUpdate = true;
         }
+
         if (needsUpdate) {
             toUpdate.add(endpoint);
         }
     }
 
-    private void createNewEndpoint(String method, String path, List<Endpoint> newEndpoints) {
-
-        Map<String, String> pathParts = extractPathParts(path);
+    private void createNewEndpoint(String method, Map<String, String> pathParts, List<Endpoint> newEndpoints) {
         Endpoint newEndpoint = new Endpoint();
         newEndpoint.setHttpMethod(method);
-        newEndpoint.setUrl(path);
-        newEndpoint.setBasePath(pathParts.get("basePath"));
-        newEndpoint.setDynamicPath(pathParts.get("dynamicPath"));
+        newEndpoint.setUrl(pathParts.get(BASE_PATH_KEY) + "/" + pathParts.get(DYNAMIC_PATH_KEY));
+        newEndpoint.setBasePath(pathParts.get(BASE_PATH_KEY));
+        newEndpoint.setDynamicPath(pathParts.get(DYNAMIC_PATH_KEY));
         newEndpoint.setIsActive(true);
         newEndpoint.setIsPublic(false);
         newEndpoints.add(newEndpoint);
@@ -167,11 +168,10 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
         String dynamicPath = parts.length > 2 ? String.join("/", Arrays.copyOfRange(parts, 2, parts.length)) : "";
 
         Map<String, String> result = new HashMap<>();
-        result.put("basePath", basePath);
-        result.put("dynamicPath", dynamicPath);
+        result.put(BASE_PATH_KEY, basePath);
+        result.put(DYNAMIC_PATH_KEY, dynamicPath);
         return result;
     }
-
 
     private boolean isPublicRoute(String url) {
         return PUBLIC_ROUTES.stream().anyMatch(publicRoute -> url.matches(convertToRegex(publicRoute)));
@@ -179,5 +179,15 @@ public class EndpointSyncServiceImpl implements EndpointSyncService {
 
     private String convertToRegex(String publicRoute) {
         return publicRoute.replace("**", ".*");
+    }
+
+    private void deactivateEndpoint(Endpoint endpoint, List<Endpoint> toDeactivate) {
+        endpoint.setIsActive(false);
+        toDeactivate.add(endpoint);
+    }
+
+    private void reactivateEndpoint(Endpoint endpoint, List<Endpoint> toUpdate) {
+        endpoint.setIsActive(true);
+        toUpdate.add(endpoint);
     }
 }

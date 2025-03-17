@@ -40,10 +40,7 @@ public class ProductImageServiceImpl implements ProductImageService {
 
     @Override
     public ApiResponse<Void> uploadProductImage(List<MultipartFile> files, Long productId) {
-        Optional<Product> product = productRepository.findById(productId);
-        if (product.isEmpty()) {
-            throw new ResourceNotFoundException("Product Not Found");
-        }
+        Product findedProduct = findById(productId);
 
         for (MultipartFile file : files) {
             String imageName = generateUniqueImageName(productId, Objects.requireNonNull(file.getOriginalFilename()));
@@ -63,7 +60,7 @@ public class ProductImageServiceImpl implements ProductImageService {
                 String imageUrl = s3Client.utilities().getUrl(builder -> builder.bucket(bucketName).key(imageName)).toExternalForm();
 
                 ProductImage productImage = new ProductImage();
-                productImage.setProduct(product.get());
+                productImage.setProduct(findedProduct);
                 productImage.setUrl(imageUrl);
                 productImage.setExtension(extension);
                 productImageRepository.save(productImage);
@@ -78,11 +75,8 @@ public class ProductImageServiceImpl implements ProductImageService {
 
     @Override
     public ApiResponse<List<ProductImagesResponse>> getProductImages(Long id) {
-        Optional<Product> product = productRepository.findById(id);
-        if (product.isEmpty()) {
-            throw new ResourceNotFoundException("Product Not Found");
-        }
-        List<ProductImage> relatedProductImages = productImageRepository.findAllByProduct(product.get());
+        Product product = findById(id);
+        List<ProductImage> relatedProductImages = productImageRepository.findAllByProduct(product);
         List<ProductImagesResponse> response = relatedProductImages.stream()
                 .map(productImagesMapper::toProductImages).toList();
 
@@ -92,10 +86,7 @@ public class ProductImageServiceImpl implements ProductImageService {
     @Override
     public void deleteProductImage(Long productId, Long imageId) {
 
-        Optional<Product> product = productRepository.findById(productId);
-        if (product.isEmpty()) {
-            throw new ResourceNotFoundException("Product Not Found");
-        }
+        findById(productId);
 
         Optional<ProductImage> existProductImage = productImageRepository.findByIdAndProductId(imageId, productId);
 
@@ -120,10 +111,14 @@ public class ProductImageServiceImpl implements ProductImageService {
 
     }
 
-
     private String generateUniqueImageName(Long productId, String imageName) {
         String extension = imageName.contains(".") ? imageName.substring(imageName.lastIndexOf(".")) : "";
         String uniqueId = UUID.randomUUID().toString();
         return "producto_" + productId + "-" + uniqueId + extension;
+    }
+
+    public Product findById(Long productId){
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product Not Found"));
     }
 }
