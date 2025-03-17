@@ -60,9 +60,6 @@ public class TestContainersConfig {
     static LocalStackContainer localStackContainer = new LocalStackContainer(DockerImageName.parse(LOCALSTACK_IMAGE_VERSION))
             .withExposedPorts(4566)
             .withServices(S3, SQS, DYNAMODB)
-            .withEnv("AWS_ACCESS_KEY_ID", "test")
-            .withEnv("AWS_SECRET_ACCESS_KEY", "test")
-            .withEnv("PERSISTENCE", "1")
             .withCopyFileToContainer(
                     MountableFile.forClasspathResource("localstack/scripts/config-aws.sh"),
                     "/etc/localstack/init/ready.d/config-aws.sh"
@@ -85,15 +82,13 @@ public class TestContainersConfig {
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
 
-        log.info("Setting up containers.");
-
-
-        log.info("S3 REGION : {}", localStackContainer.getRegion());
         registry.add("keycloak.auth-server-url", keycloakContainer::getAuthServerUrl);
         registry.add("aws.s3.useLocalStack", () -> true);
         registry.add("aws.s3.bucket-name", () -> BUCKET_NAME);
         registry.add("aws.s3.localstackEndpoint", () -> localStackContainer.getEndpointOverride(S3).toString());
-        registry.add("aws.s3.region", () -> localStackContainer.getRegion());
+        registry.add("aws.s3.region", localStackContainer::getRegion);
+        registry.add("aws.s3.access-key",localStackContainer::getAccessKey);
+        registry.add("aws.s3.secret-key",localStackContainer::getSecretKey);
 
     }
 }
