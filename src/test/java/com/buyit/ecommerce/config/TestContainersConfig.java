@@ -85,6 +85,11 @@ public class TestContainersConfig {
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
 
+        log.info("Setting up containers.");
+
+        log.info("S3 ENDPOINT: {}", localStackContainer.getEndpoint());
+        log.info("S3 OVERRIDED ENDPOINT: {}",localStackContainer.getEndpointOverride(S3).toString());
+
         registry.add("keycloak.auth-server-url", keycloakContainer::getAuthServerUrl);
         registry.add("aws.s3.useLocalStack", () -> true);
         registry.add("aws.s3.bucket-name", () -> BUCKET_NAME);
