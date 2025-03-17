@@ -4,6 +4,7 @@ import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -15,7 +16,14 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.Objects;
 
@@ -23,12 +31,16 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 
 
 @Slf4j
+@RequiredArgsConstructor
 public class TestContainersConfig {
 
 
     private static final String POSTGRES_IMAGE_VERSION = "postgres:15-alpine";
     private static final String KEYCLOAK_IMAGE_VERSION = "quay.io/keycloak/keycloak:26.0";
     private static final String LOCALSTACK_IMAGE_VERSION = "localstack/localstack:4";
+
+
+    public static final String BUCKET_NAME = "test-bucket";
 
     @Container
     @ServiceConnection
@@ -64,17 +76,46 @@ public class TestContainersConfig {
         localStackContainer.start();
         postgreSQLContainer.start();
         keycloakContainer.start();
+
+        createS3Bucket();
+
+    }
+
+    // Crear el bucket en LocalStack
+    private static void createS3Bucket() {
+        S3Client s3Client = S3Client.builder()
+                .endpointOverride(URI.create(localStackContainer.getEndpointOverride(S3).toString()))
+                .region(Region.of(localStackContainer.getRegion()))
+                .credentialsProvider(StaticCredentialsProvider.create(
+                        AwsBasicCredentials.create(localStackContainer.getAccessKey(), localStackContainer.getSecretKey())
+                ))
+                .build();
+
+        try {
+            CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
+                    .bucket(BUCKET_NAME)
+                    .build();
+
+            CreateBucketResponse createBucketResponse = s3Client.createBucket(createBucketRequest);
+            log.info("Bucket creado con éxito: {}", createBucketResponse.location());
+        } catch (Exception e) {
+            log.error("Error al crear el bucket: {}", e.getMessage());
+        }
     }
 
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
+
+        log.info("Setting up containers.");
+
+
+        log.info("S3 REGION : {}", localStackContainer.getRegion());
         registry.add("keycloak.auth-server-url", keycloakContainer::getAuthServerUrl);
-        registry.add("aws.s3.bucket-name", () -> "my-test-bucket");
-        registry.add("aws.s3.endpoint", () -> localStackContainer.getEndpointOverride(S3).toString());
+        registry.add("aws.s3.useLocalStack", () -> true);
+        registry.add("aws.s3.bucket-name", () -> BUCKET_NAME);
+        registry.add("aws.s3.localstackEndpoint", () -> localStackContainer.getEndpointOverride(S3).toString());
         registry.add("aws.s3.region", () -> localStackContainer.getRegion());
-        registry.add("aws.s3.access-key", localStackContainer::getAccessKey);
-        registry.add("aws.s3.secret-key", localStackContainer::getSecretKey);
 
     }
 }

@@ -72,11 +72,10 @@ logging:
 
 aws:
   s3:
+    useLocalStack:
     bucket-name:
-    endpoint:
+    localstackEndpoint:
     region:
-    access-key:
-    secret-key:
 
 
 
