@@ -16,14 +16,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
-import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 
-import java.net.URI;
 import java.time.Duration;
 import java.util.Objects;
 
@@ -40,7 +33,7 @@ public class TestContainersConfig {
     private static final String LOCALSTACK_IMAGE_VERSION = "localstack/localstack:4";
 
 
-    public static final String BUCKET_NAME = "test-bucket";
+    public static final String BUCKET_NAME = "ecommerce-buyit-bucket";
 
     @Container
     @ServiceConnection
@@ -67,6 +60,17 @@ public class TestContainersConfig {
     static LocalStackContainer localStackContainer = new LocalStackContainer(DockerImageName.parse(LOCALSTACK_IMAGE_VERSION))
             .withExposedPorts(4566)
             .withServices(S3, SQS, DYNAMODB)
+            .withEnv("AWS_ACCESS_KEY_ID", "test")
+            .withEnv("AWS_SECRET_ACCESS_KEY", "test")
+            .withEnv("PERSISTENCE", "1")
+            .withCopyFileToContainer(
+                    MountableFile.forClasspathResource("localstack/scripts/config-aws.sh"),
+                    "/etc/localstack/init/ready.d/config-aws.sh"
+            )
+            .withCopyFileToContainer(
+                    MountableFile.forClasspathResource("localstack/scripts/create-bucket.sh"),
+                    "/etc/localstack/init/ready.d/create-bucket.sh"
+            )
             .waitingFor(Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofMinutes(5)))
             .withReuse(true);
 
@@ -76,33 +80,7 @@ public class TestContainersConfig {
         localStackContainer.start();
         postgreSQLContainer.start();
         keycloakContainer.start();
-
-        createS3Bucket();
-
     }
-
-    // Crear el bucket en LocalStack
-    private static void createS3Bucket() {
-        S3Client s3Client = S3Client.builder()
-                .endpointOverride(URI.create(localStackContainer.getEndpointOverride(S3).toString()))
-                .region(Region.of(localStackContainer.getRegion()))
-                .credentialsProvider(StaticCredentialsProvider.create(
-                        AwsBasicCredentials.create(localStackContainer.getAccessKey(), localStackContainer.getSecretKey())
-                ))
-                .build();
-
-        try {
-            CreateBucketRequest createBucketRequest = CreateBucketRequest.builder()
-                    .bucket(BUCKET_NAME)
-                    .build();
-
-            CreateBucketResponse createBucketResponse = s3Client.createBucket(createBucketRequest);
-            log.info("Bucket creado con éxito: {}", createBucketResponse.location());
-        } catch (Exception e) {
-            log.error("Error al crear el bucket: {}", e.getMessage());
-        }
-    }
-
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
