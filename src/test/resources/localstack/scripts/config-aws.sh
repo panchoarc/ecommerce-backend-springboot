@@ -2,7 +2,10 @@
 
 echo "===> [Config] Configurando AWS CLI para LocalStack..."
 
-AWS_ENDPOINT="http://localhost:4566"
+HOST=$(hostname)  # Obtiene el nombre del host
+
+
+AWS_ENDPOINT="http://${HOST}:4566"
 AWS_ACCESS_KEY_ID="test"
 AWS_SECRET_ACCESS_KEY="test"
 

@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
@@ -64,7 +65,12 @@ public class ProductImageServiceImpl implements ProductImageService {
                 productImage.setUrl(imageUrl);
                 productImage.setExtension(extension);
                 productImageRepository.save(productImage);
-            } catch (Exception e) {
+
+            }
+            catch(SdkException e) {
+                log.error("SDK EXCEPTION: {}", e.getMessage());
+            }
+            catch (Exception e) {
                 log.error("❌ Error uploading image {} to S3: {}", imageName, e.getMessage());
                 throw new RuntimeException("Failed to upload image: " + file.getOriginalFilename());
             }
