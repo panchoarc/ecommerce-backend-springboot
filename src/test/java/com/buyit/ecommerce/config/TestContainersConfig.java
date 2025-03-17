@@ -69,7 +69,10 @@ public class TestContainersConfig {
                     "/etc/localstack/init/ready.d/create-bucket.sh"
             )
             .waitingFor(Wait.defaultWaitStrategy().withStartupTimeout(Duration.ofMinutes(5)))
-            .withReuse(true);
+            .withReuse(true)
+            .withCreateContainerCmdModifier(cmd -> Objects.requireNonNull(cmd.getHostConfig()).withPortBindings(
+                    new PortBinding(Ports.Binding.bindPort(4566), new ExposedPort(4566))
+            ));
 
 
     @BeforeAll
