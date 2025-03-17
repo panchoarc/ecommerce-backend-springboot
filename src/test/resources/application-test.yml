@@ -76,6 +76,8 @@ aws:
     bucket-name:
     localstackEndpoint:
     region:
+    access-key:
+    secret-key:
 
 
 
