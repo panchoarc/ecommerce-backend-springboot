@@ -6,25 +6,36 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-public class ImageValidator implements ConstraintValidator<ValidImage, List<MultipartFile>> {
-
+public class ImageValidator implements ConstraintValidator<ValidImage, Object> {
 
     private static final String[] ALLOWED_FORMATS = {"image/jpeg", "image/png", "image/gif"};
 
     @Override
-    public boolean isValid(List<MultipartFile> files, ConstraintValidatorContext context) {
-
-        if (files == null) {
-            return true;
+    public boolean isValid(Object value, ConstraintValidatorContext context) {
+        if (value == null) {
+            return false; // No se permiten valores nulos
         }
 
-        for (MultipartFile file : files) {
-            if (file == null || file.isEmpty()) {
-                return false;
-            }
+        if (value instanceof MultipartFile file) {
+            return isValidFile(file);
+        } else if (value instanceof List<?> fileList) {
+            return isValidFileList(fileList);
+        }
 
-            String mimeType = file.getContentType();
-            if (mimeType == null || !isAllowedFormat(mimeType)) {
+        return false; // Tipo no compatible
+    }
+
+    private boolean isValidFile(MultipartFile file) {
+        return file != null && !file.isEmpty() && isAllowedFormat(file.getContentType());
+    }
+
+    private boolean isValidFileList(List<?> files) {
+        if (files.isEmpty()) {
+            return false; // Debe haber al menos un archivo
+        }
+
+        for (Object obj : files) {
+            if (!(obj instanceof MultipartFile file) || !isValidFile(file)) {
                 return false;
             }
         }
@@ -33,8 +44,9 @@ public class ImageValidator implements ConstraintValidator<ValidImage, List<Mult
     }
 
     private boolean isAllowedFormat(String mimeType) {
+        if (mimeType == null) return false;
         for (String format : ALLOWED_FORMATS) {
-            if (mimeType.equals(format)) {
+            if (mimeType.equalsIgnoreCase(format)) {
                 return true;
             }
         }
