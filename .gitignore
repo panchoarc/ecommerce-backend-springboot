@@ -37,4 +37,4 @@ build/
 
 .env
 /src/test/resources/realm-export.json
-/src/main/resources/application-prod.yml
+/src/main/resources/application-*.yml
