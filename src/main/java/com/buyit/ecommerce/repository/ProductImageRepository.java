@@ -19,7 +19,7 @@ public interface ProductImageRepository extends JpaRepository<ProductImage, Long
     Optional<ProductImage> findByIdAndProductId(Long imgId, Long productId);
 
     @Modifying
-    @Query("UPDATE ProductImage pi SET pi.isMain = false WHERE pi.product.id = :productId AND pi.isMain = true")
+    @Query("UPDATE ProductImage pi SET pi.isMain = false WHERE pi.product.productId = :productId AND pi.isMain = true")
     void clearMainImage(@Param("productId") Long productId);
 
     List<ProductImage> findByProduct_ProductId(Long productProductId);
