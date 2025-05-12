@@ -11,6 +11,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateAddressRequest {
 
+    @NotBlank(message = "alias cannot be blank")
+    @JsonProperty("alias")
+    private String alias;
+
     @NotBlank(message = "city cannot be blank")
     @JsonProperty("city")
     private String city;

@@ -1,5 +1,6 @@
 package com.buyit.ecommerce.dto.response.address;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,9 +10,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateAddressResponse {
 
+    @JsonProperty("id")
     private Long id;
+
+    @JsonProperty("alias")
+    private String alias;
+
+    @JsonProperty("street")
     private String street;
+
+    @JsonProperty("city")
     private String city;
+
+    @JsonProperty("country")
     private String country;
+
+    @JsonProperty("postal_code")
     private String postalCode;
 }
