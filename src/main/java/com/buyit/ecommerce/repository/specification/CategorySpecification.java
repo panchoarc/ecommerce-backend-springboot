@@ -16,6 +16,12 @@ public class CategorySpecification {
     }
 
     public static Specification<Category> getCategorySpecification(CategoryRequest categoryRequest) {
+
+
+        if (categoryRequest == null) {
+            return (root, query, criteriaBuilder) ->
+                    criteriaBuilder.equal(root.get("isActive"), true);
+        }
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
