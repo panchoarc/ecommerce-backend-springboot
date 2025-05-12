@@ -14,4 +14,7 @@ public interface AuthService {
     String loginWithProvider(String provider,String redirectUrl);
 
     AccessTokenResponse handleAuthCallback(String code, String redirectUrl) throws JsonProcessingException;
+
+
+    AccessTokenResponse refreshAccessToken(String refreshToken);
 }

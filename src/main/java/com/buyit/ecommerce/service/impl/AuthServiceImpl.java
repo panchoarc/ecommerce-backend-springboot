@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
         try {
             keycloakService.assignDefaultRoleToUser(keycloakUserId, role.getName());
             userService.saveUserToDatabase(userRegisterDTO, keycloakUserId);
-            if(!emailVerified){
+            if (!emailVerified) {
                 keycloakService.sendKeycloakVerifyEmail(keycloakUserId);
             }
         } catch (KeycloakIntegrationException e) {
@@ -152,8 +152,37 @@ public class AuthServiceImpl implements AuthService {
         } catch (HttpClientErrorException.Unauthorized e) {
             throw new AuthenticationException("Invalid credentials");
         } catch (HttpClientErrorException e) {
+            log.info("Keycloak login failed: {}", e.getResponseBodyAsString());
+            throw new AuthenticationException("Login failed. Details: " + e.getResponseBodyAsString());
+        }
+    }
+
+    @Override
+    public AccessTokenResponse refreshAccessToken(String refreshToken) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("grant_type", "refresh_token");
+        params.add("refresh_token", refreshToken);
+        params.add("client_id", keycloakService.getClientId());
+        params.add("client_secret", keycloakService.getClientSecret());
+
+        try {
+
+            HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(params, headers);
+            ResponseEntity<AccessTokenResponse> response = restTemplate.postForEntity(
+                    keycloakService.getServerToken(), entity, AccessTokenResponse.class
+            );
+
+            return response.getBody();
+
+        } catch (HttpClientErrorException.Unauthorized e) {
+            throw new AuthenticationException("Invalid credentials");
+        } catch (HttpClientErrorException e) {
             log.error("Keycloak login failed: {}", e.getResponseBodyAsString());
             throw new AuthenticationException("Login failed. Details: " + e.getResponseBodyAsString());
         }
+
     }
 }
