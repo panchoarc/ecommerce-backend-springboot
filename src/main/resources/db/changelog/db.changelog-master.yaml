@@ -1,6 +1,8 @@
 databaseChangeLog:
-  -
+
   - includeAll:
-      path: db/changelog/2025/01
-  - include:
-      file: db/changelog/2025/02/06-01-changelog.sql
+      path: db/changelog/2025/03
+  - includeAll:
+      path: db/changelog/2025/04
+  - includeAll:
+      path: db/changelog/2025/05
