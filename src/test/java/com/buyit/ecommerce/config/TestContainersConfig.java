@@ -4,7 +4,6 @@ import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -24,7 +23,6 @@ import static org.testcontainers.containers.localstack.LocalStackContainer.Servi
 
 
 @Slf4j
-@RequiredArgsConstructor
 public class TestContainersConfig {
 
 
@@ -85,18 +83,14 @@ public class TestContainersConfig {
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) {
 
-        log.info("Setting up containers.");
-
-        log.info("S3 ENDPOINT: {}", localStackContainer.getEndpoint());
-        log.info("S3 OVERRIDED ENDPOINT: {}",localStackContainer.getEndpointOverride(S3).toString());
-
+        registry.add("frontend.url", () -> "http://localhost:5173");
         registry.add("keycloak.auth-server-url", keycloakContainer::getAuthServerUrl);
         registry.add("aws.s3.useLocalStack", () -> true);
         registry.add("aws.s3.bucket-name", () -> BUCKET_NAME);
         registry.add("aws.s3.localstackEndpoint", () -> localStackContainer.getEndpointOverride(S3).toString());
         registry.add("aws.s3.region", localStackContainer::getRegion);
-        registry.add("aws.s3.access-key",localStackContainer::getAccessKey);
-        registry.add("aws.s3.secret-key",localStackContainer::getSecretKey);
+        registry.add("aws.s3.access-key", localStackContainer::getAccessKey);
+        registry.add("aws.s3.secret-key", localStackContainer::getSecretKey);
 
     }
 }
