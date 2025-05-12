@@ -43,6 +43,7 @@ services:
       - "localstack_data:/var/lib/localstack"
       - "./localstack/scripts/config-aws.sh:/etc/localstack/init/ready.d/config-aws.sh:ro"
       - "./localstack/scripts/create-bucket.sh:/etc/localstack/init/ready.d/create-bucket.sh:ro"
+      - "./localstack/scripts/cors.json:/etc/localstack/init/ready.d/cors.json:ro"
     restart: unless-stopped
 
 networks:
