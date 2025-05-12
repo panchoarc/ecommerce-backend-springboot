@@ -6,6 +6,7 @@ import com.buyit.ecommerce.dto.request.product.CreateProductRequest;
 import com.buyit.ecommerce.dto.request.product.ProductRequest;
 import com.buyit.ecommerce.dto.request.product.UpdateProductRequest;
 import com.buyit.ecommerce.dto.response.product.CreateProductResponse;
+import com.buyit.ecommerce.dto.response.product.ProductCatResponse;
 import com.buyit.ecommerce.dto.response.product.ProductResponse;
 import com.buyit.ecommerce.dto.response.product.UpdateProductResponse;
 import com.buyit.ecommerce.entity.Product;
@@ -20,7 +21,7 @@ public interface ProductService {
     Page<ProductResponse> getAllProducts(ProductRequest productRequest, int page, int size);
 
 
-    ProductResponse getProductById(Long id);
+    ProductCatResponse getProductById(Long id);
 
     CreateProductResponse createProduct(CreateProductRequest createProductRequest) throws IOException;
 

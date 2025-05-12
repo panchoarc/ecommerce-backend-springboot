@@ -5,6 +5,7 @@ import com.buyit.ecommerce.dto.request.product.CreateProductRequest;
 import com.buyit.ecommerce.dto.request.product.ProductRequest;
 import com.buyit.ecommerce.dto.request.product.UpdateProductRequest;
 import com.buyit.ecommerce.dto.response.product.CreateProductResponse;
+import com.buyit.ecommerce.dto.response.product.ProductCatResponse;
 import com.buyit.ecommerce.dto.response.product.ProductResponse;
 import com.buyit.ecommerce.dto.response.product.UpdateProductResponse;
 import com.buyit.ecommerce.entity.Category;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,14 +42,16 @@ import java.util.Optional;
 @Slf4j
 public class ProductServiceImpl implements ProductService {
 
+
     private final ProductRepository productRepository;
-    private final CategoryRepository categoryRepository;
     private final ProductCategoryRepository productCategoryRepository;
+    private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
 
-
     @Override
+    @Transactional
     public Page<ProductResponse> getAllProducts(ProductRequest productRequest, int page, int size) {
+
         Specification<Product> spec = ProductSpecification.getProductSpecification(productRequest);
         Sort sort = Sort.by(Sort.Direction.ASC, "productId");
 
@@ -58,10 +62,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductResponse getProductById(Long id) {
+    @Transactional
+    public ProductCatResponse getProductById(Long id) {
 
         Product product = getProduct(id);
-        return productMapper.toProductResponseDTO(product);
+        return productMapper.toProductCatResponseDTO(product);
     }
 
     @Override
@@ -82,7 +87,6 @@ public class ProductServiceImpl implements ProductService {
         List<Category> categories = getCategories(createProductRequest.getCategoryIds());
 
         Product newProduct = new Product();
-
         newProduct.setName(createProductRequest.getName());
         newProduct.setDescription(createProductRequest.getDescription());
         newProduct.setPrice(createProductRequest.getPrice());
@@ -93,54 +97,42 @@ public class ProductServiceImpl implements ProductService {
 
         updateProductCategories(categories, savedProduct);
         return productMapper.toCreateProductResponseDTO(savedProduct);
-
-
     }
 
     @Override
     public UpdateProductResponse updateProduct(Long id, UpdateProductRequest requestProductDTO) {
+        Product existingProduct = getProduct(id); // obtiene el producto actual
 
-        boolean existingProduct = isExistingProduct(requestProductDTO.getName());
-        if (existingProduct) {
+        // Verifica si existe otro producto con el mismo nombre (distinto ID)
+        boolean nameConflict = productRepository.existsByNameAndProductIdNot(requestProductDTO.getName(), id);
+        if (nameConflict) {
             throw new ResourceExistException("Product with name " + requestProductDTO.getName() + " already exists");
         }
 
-        boolean isCategoriesValid = isCategoriesValid(requestProductDTO.getCategoryIds());
-
+        boolean isCategoriesValid = isCategoriesValid(Collections.singletonList(requestProductDTO.getCategoryId()));
         if (!isCategoriesValid) {
             throw new ResourceNotFoundException("Some category IDs are not valid");
         }
 
-        List<Category> categories = getCategories(requestProductDTO.getCategoryIds());
+        List<Category> categories = getCategories(Collections.singletonList(requestProductDTO.getCategoryId()));
 
-        Product newProduct = getProduct(id);
+        existingProduct.setName(requestProductDTO.getName());
+        existingProduct.setDescription(requestProductDTO.getDescription());
+        existingProduct.setPrice(requestProductDTO.getPrice());
+        existingProduct.setStockQuantity(requestProductDTO.getQuantity());
+        existingProduct.setIsActive(requestProductDTO.getIsActive());
 
-        newProduct.setName(requestProductDTO.getName());
-        newProduct.setDescription(requestProductDTO.getDescription());
-        newProduct.setPrice(requestProductDTO.getPrice());
-        newProduct.setStockQuantity(requestProductDTO.getQuantity());
-        newProduct.setIsActive(requestProductDTO.getIsActive());
-
-        Product savedProduct = productRepository.save(newProduct);
+        Product savedProduct = productRepository.save(existingProduct);
         updateProductCategories(categories, savedProduct);
 
         return productMapper.toUpdateProductResponseDTO(savedProduct);
-
     }
 
     @Override
     public void deleteProduct(Long id) {
         Product product = getProduct(id);
-        List<ProductCategory> products = productCategoryRepository.findByProduct(product).stream().toList();
-        if (products.isEmpty()) {
-            throw new ResourceNotFoundException("Product with id " + id + " does not exist");
-        }
-        log.info("Products List: {}", (long) products.size());
-
-        for (ProductCategory productCategory : products) {
-            productCategory.setIsActive(false);
-            productCategoryRepository.save(productCategory);
-        }
+        product.setIsActive(false);
+        productRepository.save(product);
         ResponseBuilder.success("Product deleted successfully", null);
     }
 
@@ -217,24 +209,17 @@ public class ProductServiceImpl implements ProductService {
                 .filter(productCategory -> !categories.contains(productCategory.getCategory()))
                 .toList();
 
-        // Eliminar las relaciones antiguas que ya no están asociadas
         productCategoryRepository.deleteAll(categoriesToRemove);
 
-        // Agregar las nuevas relaciones
         productCategoryRepository.saveAll(newProductCategories);
     }
 
     public boolean isCategoriesValid(List<Long> categoryIds) {
         if (categoryIds == null || categoryIds.isEmpty()) {
-            return false;  // Si la lista está vacía o es nula, devuelve false
+            return false;
         }
-
-        log.info("Checking categories validity for {}", categoryIds.size());
-
-        // Obtener todas las categorías correspondientes a los categoryIds de una sola vez
         List<Category> categories = categoryRepository.findAllById(categoryIds);
 
-        // Verificar si todas las categorías existen y están activas
         return categoryIds.size() == categories.size() &&
                 categories.stream().allMatch(Category::getIsActive);
     }

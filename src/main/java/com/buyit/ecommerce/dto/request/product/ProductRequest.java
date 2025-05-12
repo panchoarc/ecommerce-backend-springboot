@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
@@ -25,6 +27,13 @@ public class ProductRequest {
 
     @JsonProperty("quantity")
     private Integer quantity;
+
+
+    @JsonProperty("categoryId")
+    private Long categoryId;
+
+    @JsonProperty("attributes")
+    private Map<Long, List<String>> attributes;
 
 
 }
