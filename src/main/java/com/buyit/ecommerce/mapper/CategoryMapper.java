@@ -1,5 +1,6 @@
 package com.buyit.ecommerce.mapper;
 
+import com.buyit.ecommerce.dto.response.category.CategoryMenuResponse;
 import com.buyit.ecommerce.dto.response.category.CategoryResponse;
 import com.buyit.ecommerce.dto.response.category.CreateCategoryResponse;
 import com.buyit.ecommerce.dto.response.category.UpdateCategoryResponse;
@@ -9,6 +10,11 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface CategoryMapper {
+
+
+
+    @Mapping(source = "categoryId", target = "id")
+    CategoryMenuResponse toCategoryMenuResponse(Category category);
 
     @Mapping(source = "categoryId", target = "id")
     CategoryResponse toCategoryResponseDTO(Category category);

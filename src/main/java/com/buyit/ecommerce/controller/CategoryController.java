@@ -1,11 +1,16 @@
 package com.buyit.ecommerce.controller;
 
+import com.buyit.ecommerce.anotations.Public;
 import com.buyit.ecommerce.dto.request.category.CategoryRequest;
 import com.buyit.ecommerce.dto.request.category.CreateCategoryRequest;
 import com.buyit.ecommerce.dto.request.category.UpdateCategoryRequest;
+import com.buyit.ecommerce.dto.request.categoryAttributes.CreateCategoryAttributesRequest;
+import com.buyit.ecommerce.dto.response.category.CategoryMenuResponse;
 import com.buyit.ecommerce.dto.response.category.CategoryResponse;
 import com.buyit.ecommerce.dto.response.category.CreateCategoryResponse;
 import com.buyit.ecommerce.dto.response.category.UpdateCategoryResponse;
+import com.buyit.ecommerce.dto.response.categoryAttributes.CategoryAttributeDTO;
+import com.buyit.ecommerce.service.CategoryAttributeService;
 import com.buyit.ecommerce.service.CategoryService;
 import com.buyit.ecommerce.util.ApiResponse;
 import com.buyit.ecommerce.util.Pagination;
@@ -24,10 +29,22 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final CategoryAttributeService categoryAttributeService;
 
+
+    @Public
+    @GetMapping
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<CategoryMenuResponse>> getCategories() {
+        List<CategoryMenuResponse> categories = categoryService.getCategories();
+        return ResponseBuilder.success("Categories fetched successfully", categories);
+    }
+
+
+    @Public
     @PostMapping("/search")
     @ResponseStatus(HttpStatus.OK)
-    public ApiResponse<List<CategoryResponse>> getAllCategories(@Valid @RequestBody CategoryRequest categoryRequest,
+    public ApiResponse<List<CategoryResponse>> getAllCategories(@Valid @RequestBody(required = false) CategoryRequest categoryRequest,
                                                                 @RequestParam(defaultValue = "0") int page,
                                                                 @RequestParam(defaultValue = "10") int size) {
 
@@ -37,6 +54,7 @@ public class CategoryController {
 
     }
 
+    @Public
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<CategoryResponse> getCategoryById(@PathVariable Long id) {
@@ -65,4 +83,28 @@ public class CategoryController {
         categoryService.deleteCategory(id);
         return ResponseBuilder.success("Category deleted successfully", null);
     }
+
+
+    @PostMapping("/{id}/attributes")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ApiResponse<Void> createProductAttributes(@PathVariable("id") Long id, @Valid @RequestBody List<CreateCategoryAttributesRequest> attributesRequest) {
+        categoryAttributeService.createCategoryAttributes(id, attributesRequest);
+        return ResponseBuilder.success("Attributes added", null);
+    }
+
+    @Public
+    @GetMapping("/{id}/attributes")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<List<CategoryAttributeDTO>> getProductAttributes(@PathVariable("id") Long id) {
+        List<CategoryAttributeDTO> categoryAttributes = categoryAttributeService.getCategoryAttributes(id);
+        return ResponseBuilder.success("Attributes retrieved", categoryAttributes);
+    }
+
+    @PutMapping("/{id}/attributes")
+    @ResponseStatus(HttpStatus.OK)
+    public ApiResponse<Void> getProductAttributes(@PathVariable("id") Long id, @Valid @RequestBody List<CreateCategoryAttributesRequest> attributesRequest) {
+        categoryAttributeService.updateCategoryAttributes(id, attributesRequest);
+        return ResponseBuilder.success("Attributes updated", null);
+    }
+
 }
