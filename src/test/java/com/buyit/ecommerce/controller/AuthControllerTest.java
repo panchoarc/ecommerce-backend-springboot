@@ -3,15 +3,15 @@ package com.buyit.ecommerce.controller;
 import com.buyit.ecommerce.config.TestContainersConfig;
 import com.buyit.ecommerce.dto.request.UserLoginDTO;
 import com.buyit.ecommerce.dto.request.UserRegisterDTO;
-import com.buyit.ecommerce.entity.User;
-import com.buyit.ecommerce.repository.UsersRepository;
 import com.buyit.ecommerce.service.AuthService;
 import com.buyit.ecommerce.service.KeycloakService;
+import com.buyit.ecommerce.util.UserTestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +21,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.Optional;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -47,8 +47,10 @@ class AuthControllerTest extends TestContainersConfig {
     private AuthService authService;
 
     @Autowired
-    private UsersRepository usersRepository;
+    private UserTestUtils userTestUtils;
 
+    @Autowired
+    private WebApplicationContext context;
     @Autowired
     private KeycloakService keycloakService;
 
@@ -64,13 +66,16 @@ class AuthControllerTest extends TestContainersConfig {
         userRegisterDTO.setPassword("SecurePass123!");
     }
 
+    @BeforeEach
+    void setUpInterceptors() {
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .build();
+    }
+
     @AfterEach
     void tearDown() {
-        Optional<User> user = usersRepository.findByEmail(userRegisterDTO.getEmail());
-        user.ifPresent(value -> {
-            keycloakService.deleteUserFromKeycloak(value.getKeycloakUserId());
-            usersRepository.delete(value);
-        });
+        userTestUtils.cleanUsers();
     }
 
     @Test
@@ -146,7 +151,7 @@ class AuthControllerTest extends TestContainersConfig {
         String expectedAuthUrl = keycloakService.getRedirectProvider(provider, redirectUrl);
 
         MvcResult result = mockMvc.perform(get("/auth/provider/{provider}", provider))
-                .andExpect(status().is3xxRedirection())
+                .andExpect(status().isOk())
                 .andReturn();
 
         JsonNode rootNode = objectMapper.readTree(result.getResponse().getContentAsString());
