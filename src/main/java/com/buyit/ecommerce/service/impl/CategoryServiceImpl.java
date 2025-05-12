@@ -3,6 +3,7 @@ package com.buyit.ecommerce.service.impl;
 import com.buyit.ecommerce.dto.request.category.CategoryRequest;
 import com.buyit.ecommerce.dto.request.category.CreateCategoryRequest;
 import com.buyit.ecommerce.dto.request.category.UpdateCategoryRequest;
+import com.buyit.ecommerce.dto.response.category.CategoryMenuResponse;
 import com.buyit.ecommerce.dto.response.category.CategoryResponse;
 import com.buyit.ecommerce.dto.response.category.CreateCategoryResponse;
 import com.buyit.ecommerce.dto.response.category.UpdateCategoryResponse;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -32,6 +34,12 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+
+    @Override
+    public List<CategoryMenuResponse> getCategories() {
+        List<Category> categoryPage = categoryRepository.findActiveCategories();
+        return categoryPage.stream().map(categoryMapper::toCategoryMenuResponse).toList();
+    }
 
     @Override
     public Page<CategoryResponse> getAllCategories(CategoryRequest categoryRequest, int page, int size) {
@@ -91,7 +99,8 @@ public class CategoryServiceImpl implements CategoryService {
         categoryRepository.save(category);
     }
 
-    private Category getCategory(Long id) {
+    @Override
+    public Category getCategory(Long id) {
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("No category found with ID: " + id));
     }
