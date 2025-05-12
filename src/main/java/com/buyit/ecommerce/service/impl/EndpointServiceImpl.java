@@ -14,6 +14,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -41,6 +42,11 @@ public class EndpointServiceImpl implements EndpointService {
         endpoint.setIsPublic(endpointRequest.getIsPublic());
         endpoint.setIsActive(endpointRequest.getIsActive());
         endpointRepository.save(endpoint);
+    }
+
+    @Override
+    public List<String> getPublicEndpoints() {
+        return endpointRepository.findByIsPublicTrue();
     }
 
     private Endpoint getEndpoint(Long id) {
