@@ -11,5 +11,5 @@ public class ProductImagesResponse {
 
     private Long id;
     private String url;
-    private String extension;
+    private Boolean isMainImage;
 }

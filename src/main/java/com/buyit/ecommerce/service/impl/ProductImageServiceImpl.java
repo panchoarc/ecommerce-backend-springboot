@@ -1,83 +1,85 @@
 package com.buyit.ecommerce.service.impl;
 
+import com.buyit.ecommerce.dto.request.product.ImageUploadForm;
 import com.buyit.ecommerce.dto.response.product.ProductImagesResponse;
 import com.buyit.ecommerce.entity.Product;
 import com.buyit.ecommerce.entity.ProductImage;
+import com.buyit.ecommerce.exception.custom.ResourceIllegalState;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
 import com.buyit.ecommerce.mapper.ProductImagesMapper;
 import com.buyit.ecommerce.repository.ProductImageRepository;
 import com.buyit.ecommerce.repository.ProductRepository;
+import com.buyit.ecommerce.service.FileService;
 import com.buyit.ecommerce.service.ProductImageService;
 import com.buyit.ecommerce.util.ApiResponse;
 import com.buyit.ecommerce.util.ResponseBuilder;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.core.exception.SdkException;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ProductImageServiceImpl implements ProductImageService {
 
-    @Value("${aws.s3.bucket-name}")
-    private String bucketName;
 
-    private final S3Client s3Client;
+    private final FileService fileService;
     private final ProductImageRepository productImageRepository;
     private final ProductRepository productRepository;
     private final ProductImagesMapper productImagesMapper;
 
+
     @Override
-    public ApiResponse<Void> uploadProductImage(List<MultipartFile> files, Long productId) {
+    @Transactional
+    public ApiResponse<Void> uploadProductImage(Long productId, List<ImageUploadForm> files) throws IOException {
         Product findedProduct = findById(productId);
 
-        for (MultipartFile file : files) {
-            String imageName = generateUniqueImageName(productId, Objects.requireNonNull(file.getOriginalFilename()));
+        // Elimina todas las imágenes actuales del producto
+        List<ProductImage> existingImages = productImageRepository.findByProduct_ProductId(productId);
+        for (ProductImage image : existingImages) {
+            fileService.deleteFile(image.getUrl()); // Elimina las imágenes del storage si es necesario
+        }
+        productImageRepository.deleteAllByProduct(findedProduct); // Elimina las imágenes de la base de datos
+
+        long newMainCount = files.stream().filter(f -> Boolean.TRUE.equals(f.getIsMain())).count();
+
+        if (newMainCount > 1) {
+            throw new ResourceIllegalState("Only one image can be marked as main.");
+        }
+
+        boolean uploadingNewMain = newMainCount == 1;
+
+        // Si se está subiendo una nueva imagen principal, eliminamos la anterior
+        if (uploadingNewMain) {
+            productImageRepository.clearMainImage(productId);
+        }
+
+        // Sube las nuevas imágenes
+        for (ImageUploadForm fileForm : files) {
+            MultipartFile file = fileForm.getImage();
+            Boolean isMain = fileForm.getIsMain();
+            String fileUrl = fileService.uploadFile(file); // Subir el archivo
+
             String extension = file.getContentType();
 
-            try {
-                byte[] fileBytes = file.getBytes(); // Convertir a bytes correctamente
-                PutObjectRequest request = PutObjectRequest.builder()
-                        .bucket(bucketName)
-                        .key(imageName)
-                        .contentType(file.getContentType())
-                        .contentLength((long) fileBytes.length) // Asegurar que el tamaño sea correcto
-                        .build();
-
-                s3Client.putObject(request, RequestBody.fromBytes(fileBytes));
-
-                String imageUrl = s3Client.utilities().getUrl(builder -> builder.bucket(bucketName).key(imageName)).toExternalForm();
-
-                ProductImage productImage = new ProductImage();
-                productImage.setProduct(findedProduct);
-                productImage.setUrl(imageUrl);
-                productImage.setExtension(extension);
-                productImageRepository.save(productImage);
-
-            }
-            catch(SdkException e) {
-                log.error("SDK EXCEPTION: {}", e.getMessage());
-            }
-            catch (Exception e) {
-                log.error("❌ Error uploading image {} to S3: {}", imageName, e.getMessage());
-                throw new RuntimeException("Failed to upload image: " + file.getOriginalFilename());
-            }
+            // Guarda la nueva imagen en la base de datos
+            ProductImage productImage = new ProductImage();
+            productImage.setProduct(findedProduct);
+            productImage.setUrl(fileUrl);
+            productImage.setIsMain(isMain);
+            productImage.setExtension(extension);
+            productImageRepository.save(productImage);
         }
 
         return ResponseBuilder.success("Images uploaded successfully", null);
     }
+
 
     @Override
     public ApiResponse<List<ProductImagesResponse>> getProductImages(Long id) {
@@ -90,7 +92,7 @@ public class ProductImageServiceImpl implements ProductImageService {
     }
 
     @Override
-    public void deleteProductImage(Long productId, Long imageId) {
+    public void deleteProductImage(Long productId, Long imageId) throws IOException {
 
         findById(productId);
 
@@ -106,24 +108,12 @@ public class ProductImageServiceImpl implements ProductImageService {
 
         String key = parts[parts.length - 1];
 
-        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest
-                .builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-
-        s3Client.deleteObject(deleteObjectRequest);
+        fileService.deleteFile(key);
         productImageRepository.delete(productImage);
 
     }
 
-    private String generateUniqueImageName(Long productId, String imageName) {
-        String extension = imageName.contains(".") ? imageName.substring(imageName.lastIndexOf(".")) : "";
-        String uniqueId = UUID.randomUUID().toString();
-        return "producto_" + productId + "-" + uniqueId + extension;
-    }
-
-    public Product findById(Long productId){
+    public Product findById(Long productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product Not Found"));
     }
