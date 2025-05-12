@@ -93,6 +93,7 @@ class AddressServiceTest extends TestContainersConfig {
 
         String keycloakUserId = extractKeycloakUserId();
         CreateAddressRequest createAddress = new CreateAddressRequest();
+        createAddress.setAlias("AliasTest");
         createAddress.setCity("");
         createAddress.setCountry("");
         createAddress.setPostalCode("testpostalcode");
@@ -115,6 +116,7 @@ class AddressServiceTest extends TestContainersConfig {
 
         String keycloakUserId = extractKeycloakUserId();
         CreateAddressRequest createAddress = new CreateAddressRequest();
+        createAddress.setAlias("AliasTest");
         createAddress.setCity("testcity");
         createAddress.setCountry("testcountry");
         createAddress.setPostalCode("testpostalcode");
@@ -137,6 +139,7 @@ class AddressServiceTest extends TestContainersConfig {
 
         String keycloakUserId = extractKeycloakUserId();
         CreateAddressRequest createAddress = new CreateAddressRequest();
+        createAddress.setAlias("AliasTest");
         createAddress.setCity("testcity");
         createAddress.setCountry("testcountry");
         createAddress.setPostalCode("testpostalcode");
@@ -160,6 +163,7 @@ class AddressServiceTest extends TestContainersConfig {
 
         String keycloakUserId = extractKeycloakUserId();
         CreateAddressRequest createAddress = new CreateAddressRequest();
+        createAddress.setAlias("AliasTest");
         createAddress.setCity("testcity");
         createAddress.setCountry("testcountry");
         createAddress.setPostalCode("testpostalcode");
@@ -182,6 +186,7 @@ class AddressServiceTest extends TestContainersConfig {
 
         String keycloakUserId = extractKeycloakUserId();
         CreateAddressRequest createAddress = new CreateAddressRequest();
+        createAddress.setAlias("AliasTest");
         createAddress.setCity("testcity");
         createAddress.setCountry("testcountry");
         createAddress.setPostalCode("testpostalcode");
@@ -206,6 +211,7 @@ class AddressServiceTest extends TestContainersConfig {
 
         String keycloakUserId = extractKeycloakUserId();
         CreateAddressRequest createAddress = new CreateAddressRequest();
+        createAddress.setAlias("AliasTest");
         createAddress.setCity("testcity");
         createAddress.setCountry("testcountry");
         createAddress.setPostalCode("testpostalcode");
@@ -238,12 +244,14 @@ class AddressServiceTest extends TestContainersConfig {
 
         String keycloakUserId = extractKeycloakUserId();
         CreateAddressRequest createAddress = new CreateAddressRequest();
+        createAddress.setAlias("AliasTest");
         createAddress.setCity("testcity");
         createAddress.setCountry("testcountry");
         createAddress.setPostalCode("testpostalcode");
         createAddress.setStreet("teststreet");
 
         UpdateAddressRequest updateAddress = new UpdateAddressRequest();
+        updateAddress.setAlias("AliasTest2");
         updateAddress.setCity("TESTCITY2");
         updateAddress.setCountry("TESTCOUNTRY2");
         updateAddress.setPostalCode("testpostalcode2");

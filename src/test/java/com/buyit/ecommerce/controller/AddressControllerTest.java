@@ -77,6 +77,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_ThrowUnauthorized_When_AuthorizationIsProvided() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
@@ -93,6 +94,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_AddressNotFound_When_AddressNotExistAndAuthorizationIsProvided() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
@@ -113,6 +115,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_ReturnAddress_When_AddressExistsAndAuthorizationIsProvided() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
@@ -134,6 +137,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_Unauthorized_When_AuthorizationHeaderNotAttached() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
@@ -154,6 +158,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_CreatedFailed_When_InvalidParameters() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("");
         addressRequest.setCountry("");
         addressRequest.setStreet("StreetTest");
@@ -176,6 +181,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_CreateSuccessfully_When_ValidParameters() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
@@ -194,6 +200,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_FailToUpdate_WhenInvalidParameters() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
@@ -223,12 +230,14 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_UpdateSuccessful_When_ValidParameters() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
         addressRequest.setPostalCode("PostalCodeTest");
 
         UpdateAddressRequest updateAddressRequest = new UpdateAddressRequest();
+        updateAddressRequest.setAlias("AliasTest2");
         updateAddressRequest.setCity("CityTest2");
         updateAddressRequest.setCountry("CountryTest2");
         updateAddressRequest.setStreet("StreetTest2");
@@ -254,6 +263,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_DeleteFailed_When_AddressIdNotExists() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
@@ -273,6 +283,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_DeleteFailed_When_AddressExistsAndNotOwnThatAddress() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
@@ -293,6 +304,7 @@ class AddressControllerTest extends TestContainersConfig {
     void Should_DeleteSuccessful_When_IdExistsAndOwnership() throws Exception {
 
         CreateAddressRequest addressRequest = new CreateAddressRequest();
+        addressRequest.setAlias("AliasTest");
         addressRequest.setCity("CityTest");
         addressRequest.setCountry("CountryTest");
         addressRequest.setStreet("StreetTest");
@@ -312,6 +324,7 @@ class AddressControllerTest extends TestContainersConfig {
     private CreateAddressResponse createAddress(CreateAddressRequest requestAddress) throws Exception {
 
         CreateAddressRequest request = new CreateAddressRequest();
+        request.setAlias(requestAddress.getAlias());
         request.setCity(requestAddress.getCity());
         request.setCountry(requestAddress.getCountry());
         request.setStreet(requestAddress.getStreet());
