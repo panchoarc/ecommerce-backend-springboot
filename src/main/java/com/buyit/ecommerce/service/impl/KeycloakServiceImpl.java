@@ -76,7 +76,7 @@ public class KeycloakServiceImpl implements KeycloakService {
             if (response.getStatus() != 201) {
                 Map<String, String> respuesta = response.readEntity(Map.class);
                 log.info("Respuesta: {}", respuesta);
-                throw new KeycloakIntegrationException("Failed to create user in Keycloak: " + respuesta.get("errorMessage"));
+                throw new KeycloakIntegrationException(respuesta.get("errorMessage"));
             }
             return extractUserIdFromResponse(response);
         }
