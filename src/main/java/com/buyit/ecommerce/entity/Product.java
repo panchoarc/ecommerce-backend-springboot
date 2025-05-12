@@ -30,7 +30,6 @@ public class Product {
     @Column(name = "stock_quantity")
     private int stockQuantity;
 
-
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -42,7 +41,6 @@ public class Product {
     @Column(name = "active")
     private Boolean isActive;
 
-
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductImage> images;
 
@@ -51,6 +49,9 @@ public class Product {
 
     @OneToMany(mappedBy = "product")
     private List<Review> reviews;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductAttribute> attributeValues;
 
     // Getters and Setters
 }
