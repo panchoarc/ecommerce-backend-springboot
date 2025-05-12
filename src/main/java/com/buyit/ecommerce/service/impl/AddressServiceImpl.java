@@ -71,6 +71,7 @@ public class AddressServiceImpl implements AddressService {
         User dbUser = userService.getUserByKeycloakId(keycloakId);
 
         Address createAddress = new Address();
+        createAddress.setAlias(createAddressRequest.getAlias());
         createAddress.setCity(createAddressRequest.getCity());
         createAddress.setCountry(createAddressRequest.getCountry());
         createAddress.setPostalCode(createAddressRequest.getPostalCode());
@@ -92,6 +93,7 @@ public class AddressServiceImpl implements AddressService {
         Address address = getAddresByUserIdAndAddress(id);
 
         address.setUser(dbUser);
+        address.setAlias(updateAddressRequest.getAlias());
         address.setCity(updateAddressRequest.getCity());
         address.setCountry(updateAddressRequest.getCountry());
         address.setPostalCode(updateAddressRequest.getPostalCode());

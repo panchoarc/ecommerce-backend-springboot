@@ -10,7 +10,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface AddressMapper {
 
-
     @Mapping(source = "addressId", target = "id")
     UserAddressResponse toUserAddressResponseDTO(Address address);
 
