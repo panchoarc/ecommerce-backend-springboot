@@ -19,12 +19,16 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
 
     private final PermissionsService permissionService;
 
-
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler){
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
 
         String mappedPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
         String method = request.getMethod();
+
+        Boolean isPublic = (Boolean) request.getAttribute("IS_PUBLIC_ENDPOINT");
+        if (Boolean.TRUE.equals(isPublic)) {
+            return true;
+        }
 
         Collection<String> userRoles = (Collection<String>) request.getAttribute("USER_ROLES");
 
