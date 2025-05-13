@@ -158,13 +158,18 @@ class ProductControllerTest extends TestContainersConfig {
 
         CreateProductResponse productResponse = objectMapper.readValue(dataX.traverse(), CreateProductResponse.class);
 
-
         Resource resource = new ClassPathResource("foto1.jpg");
         File img = resource.getFile(); // Cargar archivo correctamente
-        MockMultipartFile file = new MockMultipartFile("images", img.getName(), MediaType.IMAGE_JPEG_VALUE, new FileInputStream(img));
+        MockMultipartFile imageFile = new MockMultipartFile(
+                "images[0].image", // field name with index
+                img.getName(),
+                MediaType.IMAGE_JPEG_VALUE,
+                new FileInputStream(img)
+        );
 
         mockMvc.perform(multipart("/products/{id}/images", productResponse.getId())
-                        .file(file)
+                        .file(imageFile)
+                        .param("images[0].isMain", "true") // campo simple booleano
                         .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.MULTIPART_FORM_DATA)
                 )
