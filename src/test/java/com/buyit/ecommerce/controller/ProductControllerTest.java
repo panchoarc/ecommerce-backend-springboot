@@ -24,6 +24,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.mock.web.MockPart;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -161,20 +162,24 @@ class ProductControllerTest extends TestContainersConfig {
         Resource resource = new ClassPathResource("foto1.jpg");
         File img = resource.getFile(); // Cargar archivo correctamente
         MockMultipartFile imageFile = new MockMultipartFile(
-                "images[0].image", // field name with index
+                "images[0].image", // Correcto para MultipartFile
                 img.getName(),
                 MediaType.IMAGE_JPEG_VALUE,
                 new FileInputStream(img)
         );
 
+        MockPart isMainPart = new MockPart(
+                "images[0].isMain", // Esto es un form field (no archivo)
+                "true".getBytes()
+        );
+        isMainPart.getHeaders().setContentType(MediaType.TEXT_PLAIN); // Importante
+
         mockMvc.perform(multipart("/products/{id}/images", productResponse.getId())
-                        .file(imageFile)
-                        .param("images[0].isMain", "true") // campo simple booleano
+                        .file(imageFile) // archivo
+                        .part(isMainPart) // form field booleano
                         .header("Authorization", "Bearer " + adminToken)
-                        .contentType(MediaType.MULTIPART_FORM_DATA)
                 )
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.message").value("Images uploaded successfully"));
     }
-
 }
