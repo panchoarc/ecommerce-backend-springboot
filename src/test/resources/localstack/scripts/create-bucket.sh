@@ -5,9 +5,8 @@ echo "===> [S3] Configurando LocalStack (Bucket y CORS)..."
 BUCKET_NAME="ecommerce-buyit-bucket"
 
 # Detectar el host de LocalStack (localstack o localhost)
-LOCALSTACK_HOST=${LOCALSTACK_HOST:-"localhost"}
-
-AWS_ENDPOINT="http://${LOCALSTACK_HOST}:4566"
+LOCALSTACK_HOSTNAME=${LOCALSTACK_HOST:-"localhost"}
+AWS_ENDPOINT="http://${LOCALSTACK_HOSTNAME}:4566"
 
 echo "===> [S3] Usando endpoint: $AWS_ENDPOINT"
 

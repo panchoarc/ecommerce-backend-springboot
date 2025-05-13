@@ -33,8 +33,7 @@ public class TestContainersConfig {
             .withUsername("admin")
             .withPassword("admin")
             .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofMinutes(5))
-            .withReuse(true);
+            .withStartupTimeout(Duration.ofMinutes(5));
 
     @Container
     static GenericContainer<?> keycloakContainer = new GenericContainer<>(DockerImageName.parse(KEYCLOAK_IMAGE_VERSION))
@@ -46,8 +45,7 @@ public class TestContainersConfig {
             .withEnv("KC_METRICS_ENABLED", "true")
             .withCommand("start-dev --import-realm")
             .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofMinutes(5))
-            .withReuse(true);
+            .withStartupTimeout(Duration.ofMinutes(5));
 
     @Container
     static LocalStackContainer localStackContainer = new LocalStackContainer(DockerImageName.parse(LOCALSTACK_IMAGE_VERSION))
@@ -64,9 +62,8 @@ public class TestContainersConfig {
                     MountableFile.forClasspathResource("localstack/scripts/cors.json"),
                     "/etc/localstack/init/ready.d/cors.json"
             )
-            .waitingFor(Wait.forListeningPort())
-            .withStartupTimeout(Duration.ofMinutes(5))
-            .withReuse(true);
+            .waitingFor(Wait.forHealthcheck())
+            .withStartupTimeout(Duration.ofMinutes(5));
 
 
     @BeforeAll
