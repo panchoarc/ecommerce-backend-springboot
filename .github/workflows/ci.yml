@@ -32,6 +32,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+
+      - name: Install yq
+        run: |
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
+          sudo chmod +x /usr/bin/yq
+
       - name: Replace client secrets in exported realm file
         run: |
           jq '.identityProviders[].config.clientId = "${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}" |
@@ -41,6 +47,12 @@ jobs:
               .smtpServer.fromDisplayName = "${{ secrets.GOOGLE_SMTP_EMAIL }}" |
               .smtpServer.envelopeFrom = "${{ secrets.GOOGLE_SMTP_EMAIL }}" |
               .smtpServer.user = "${{ secrets.GOOGLE_SMTP_EMAIL }}"' ./src/test/resources/realm-base.json > ./src/test/resources/realm-export.json
+
+      - name: Replace client secrets in application-test.yml
+        run: |
+          yq eval '.stripe.secret_key = "${{ secrets.STRIPE_API_KEY_TEST }}"' -i ./src/test/resources/application-test.yml  
+          
+          
 
       - name: Grant execute permissions to Maven wrapper
         run: chmod +x ./mvnw
