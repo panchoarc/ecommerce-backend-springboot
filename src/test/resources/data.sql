@@ -1,93 +1,192 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 15.10
+-- Dumped by pg_dump version 15.10
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Data for Name: category; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
+INSERT INTO public.category (category_id, name, description, is_active) VALUES (40, 'eeeee', 'sfsfsffss', true);
+INSERT INTO public.category (category_id, name, description, is_active) VALUES (36, 'Zapatos', 'Zapatos caseros', true);
+INSERT INTO public.category (category_id, name, description, is_active) VALUES (37, 'Zapatosz', 'Cualquier cosa', true);
+INSERT INTO public.category (category_id, name, description, is_active) VALUES (38, 'FranciscoAsd', 'Cualquier cosa', true);
+INSERT INTO public.category (category_id, name, description, is_active) VALUES (39, 'admin', 'wdwd', true);
+INSERT INTO public.category (category_id, name, description, is_active) VALUES (41, 'qwerty', 'qwerty', true);
+INSERT INTO public.category (category_id, name, description, is_active) VALUES (42, 'wwwss', 'cualquier cosa', true);
+INSERT INTO public.category (category_id, name, description, is_active) VALUES (44, 'Calcetines', 'asfasasd', true);
+INSERT INTO public.category (category_id, name, description, is_active) VALUES (43, 'Ropa', 'Descripción de la ropa', true);
 
 
-INSERT INTO public.category(name,description,is_active) VALUES ('Category 1','Description 1',true);
-INSERT INTO public.category(name,description,is_active) VALUES ('Category 2','Description 2',true);
-INSERT INTO public.category(name,description,is_active) VALUES ('Category 3','Description 3',true);
+--
+-- Data for Name: endpoint; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (39, '/auth/callback', '/auth', 'callback', 'GET', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (40, '/v3/api-docs/swagger-config', '/v3', 'api-docs/swagger-config', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (41, '/auth/provider/{provider}', '/auth', 'provider/{provider}', 'GET', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (42, '/auth/register', '/auth', 'register', 'POST', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (43, '/auth/login', '/auth', 'login', 'POST', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (44, '/swagger-ui.html', '/swagger-ui.html', '', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (45, '/v3/api-docs', '/v3', 'api-docs', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (27, '/products/search', '/products', 'search', 'POST', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (6, '/category/{id}', '/category', '{id}', 'GET', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (7, '/category/search', '/category', 'search', 'POST', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (16, '/products/{id}', '/products', '{id}', 'GET', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (31, '/products/{id}/images/{imgId}', '/products', '{id}/images/{imgId}', 'DELETE', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (1, '/products/{id}/reviews', '/products', '{id}/reviews', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (3, '/address/{id}', '/address', '{id}', 'PUT', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (9, '/reviews', '/reviews', '', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (11, '/address/{id}', '/address', '{id}', 'DELETE', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (14, '/address/search', '/address', 'search', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (15, '/orders/{id}', '/orders', '{id}', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (19, '/orders', '/orders', '', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (21, '/address/{id}', '/address', '{id}', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (22, '/address', '/address', '', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (25, '/reviews/{id}', '/reviews', '{id}', 'DELETE', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (29, '/reviews/{id}', '/reviews', '{id}', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (30, '/orders', '/orders', '', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (2, '/v3/api-docs.yaml', '/v3', 'api-docs.yaml', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (4, '/category', '/category', '', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (5, '/products/{id}', '/products', '{id}', 'DELETE', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (10, '/endpoints/{id}', '/endpoints', '{id}', 'PUT', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (12, '/products', '/products', '', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (13, '/category/{id}', '/category', '{id}', 'PUT', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (17, '/products/{id}/images', '/products', '{id}/images', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (18, '/roles/{id}/endpoints', '/roles', '{id}/endpoints', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (20, '/category/{id}', '/category', '{id}', 'DELETE', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (23, '/products/{id}', '/products', '{id}', 'PUT', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (24, '/roles/sync', '/roles', 'sync', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (26, '/endpoints/sync', '/endpoints', 'sync', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (28, '/backup/create', '/backup', 'create', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (8, '/products/{id}/images', '/products', '{id}/images', 'GET', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (33, '/auth/logout', '/auth', 'logout', 'POST', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (35, '/users/me', '/users', 'me', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (38, '/auth/refresh-token', '/auth', 'refresh-token', 'GET', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (47, '/category/{id}/attributes', '/category', '{id}/attributes', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (49, '/category/{id}/attributes', '/category', '{id}/attributes', 'PUT', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (50, '/orders/{id}/vouchers', '/orders', '{id}/vouchers', 'GET', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (51, '/payments/create', '/payments', 'create', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (52, '/category', '/category', '', 'GET', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (48, '/category/{id}/attributes', '/category', '{id}/attributes', 'GET', true, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (53, '/products/{id}/attributes', '/products', '{id}/attributes', 'POST', false, true);
+INSERT INTO public.endpoint (id, url, base_path, dynamic_path, http_method, is_public, is_active) VALUES (54, '/products/{id}/attributes', '/products', '{id}/attributes', 'GET', false, true);
 
 
-INSERT INTO public.role (is_active, id, external_id, name) VALUES (true, 1, '843d9d89-e362-42bb-8cf5-889c47b0c70e', 'user');
-INSERT INTO public.role (is_active, id, external_id, name) VALUES (true, 2, 'dad3ae27-d39e-4ed4-be7b-3e57edb1e32e', 'admin');
-INSERT INTO public.role (is_active, id, external_id, name) VALUES (true, 3, 'dca9785b-6205-493a-885b-5fa36d772efa', 'uma_protection');
+--
+-- Data for Name: role; Type: TABLE DATA; Schema: public; Owner: admin
+--
+
+INSERT INTO public.role (id, name, external_id, is_active) VALUES (1, 'user', '843d9d89-e362-42bb-8cf5-889c47b0c70e', true);
+INSERT INTO public.role (id, name, external_id, is_active) VALUES (2, 'admin', 'dad3ae27-d39e-4ed4-be7b-3e57edb1e32e', true);
+INSERT INTO public.role (id, name, external_id, is_active) VALUES (3, 'uma_protection', 'dca9785b-6205-493a-885b-5fa36d772efa', true);
 
 
+--
+-- Data for Name: role_endpoint; Type: TABLE DATA; Schema: public; Owner: admin
+--
 
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 1, 'products', '{id}/reviews', 'GET', '/products/{id}/reviews');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 2, 'v3', 'api-docs.yaml', 'GET', '/v3/api-docs.yaml');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 3, 'address', '{id}', 'PUT', '/address/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 4, 'category', NULL, 'POST', '/category');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 5, 'products', '{id}', 'DELETE', '/products/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 6, 'category', '{id}', 'GET', '/category/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 7, 'category', 'search', 'POST', '/category/search');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 8, 'products', '{id}/images', 'GET', '/products/{id}/images');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 9, 'reviews', NULL, 'POST', '/reviews');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 10, 'endpoints', '{id}', 'PUT', '/endpoints/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 11, 'address', '{id}', 'DELETE', '/address/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 12, 'products', NULL, 'POST', '/products');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 13, 'category', '{id}', 'PUT', '/category/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 14, 'address', 'search', 'GET', '/address/search');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 15, 'orders', '{id}', 'GET', '/orders/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 16, 'products', '{id}', 'GET', '/products/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 17, 'products', '{id}/images', 'POST', '/products/{id}/images');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 18, 'roles', '{id}/endpoints', 'POST', '/roles/{id}/endpoints');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 19, 'orders', NULL, 'POST', '/orders');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 20, 'category', '{id}', 'DELETE', '/category/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 21, 'address', '{id}', 'GET', '/address/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 22, 'address', NULL, 'POST', '/address');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 23, 'products', '{id}', 'PUT', '/products/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 24, 'roles', 'sync', 'POST', '/roles/sync');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 25, 'reviews', '{id}', 'DELETE', '/reviews/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 26, 'endpoints', 'sync', 'POST', '/endpoints/sync');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 27, 'products', 'search', 'POST', '/products/search');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 28, 'backup', 'create', 'POST', '/backup/create');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 29, 'reviews', '{id}', 'GET', '/reviews/{id}');
-INSERT INTO public.endpoint (is_active, is_public, id, base_path, dynamic_path, http_method, url) VALUES (true, false, 30, 'orders', NULL, 'GET', '/orders');
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (1, 2, 1, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (2, 2, 2, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (3, 2, 3, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (4, 2, 4, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (5, 2, 5, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (6, 2, 6, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (7, 2, 7, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (8, 2, 8, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (9, 2, 9, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (10, 2, 10, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (11, 2, 11, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (12, 2, 12, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (13, 2, 13, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (14, 2, 14, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (15, 2, 15, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (16, 2, 16, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (17, 2, 17, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (18, 2, 18, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (19, 2, 19, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (20, 2, 20, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (21, 2, 21, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (22, 2, 22, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (23, 2, 23, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (24, 2, 24, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (25, 2, 25, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (26, 2, 26, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (27, 2, 27, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (28, 2, 28, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (29, 2, 29, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (30, 2, 30, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (31, 1, 1, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (32, 1, 3, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (33, 1, 6, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (34, 1, 7, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (35, 1, 8, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (36, 1, 9, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (37, 1, 11, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (38, 1, 14, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (39, 1, 15, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (40, 1, 16, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (41, 1, 19, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (42, 1, 21, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (43, 1, 22, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (44, 1, 25, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (45, 1, 27, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (46, 1, 29, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (47, 1, 30, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (48, 1, 35, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (49, 2, 35, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (51, 2, 47, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (53, 2, 49, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (54, 2, 50, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (55, 1, 50, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (56, 1, 51, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (57, 2, 51, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (58, 2, 53, true);
+INSERT INTO public.role_endpoint (id, rol_id, endpoint_id, is_active) VALUES (59, 2, 54, true);
 
 
+--
+-- Name: category_category_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+--
 
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 1, 1, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 2, 2, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 3, 3, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 4, 4, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 5, 5, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 6, 6, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 7, 7, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 8, 8, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 9, 9, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 10, 10, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 11, 11, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 12, 12, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 13, 13, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 14, 14, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 15, 15, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 16, 16, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 17, 17, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 18, 18, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 19, 19, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 20, 20, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 21, 21, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 22, 22, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 23, 23, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 24, 24, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 25, 25, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 26, 26, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 27, 27, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 28, 28, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 29, 29, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 30, 30, 2);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 1, 31, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 3, 32, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 6, 33, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 7, 34, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 8, 35, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 9, 36, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 11, 37, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 14, 38, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 15, 39, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 16, 40, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 19, 41, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 21, 42, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 22, 43, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 25, 44, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 27, 45, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 29, 46, 1);
-INSERT INTO public.role_endpoint (is_active, endpoint_id, id, rol_id) VALUES (true, 30, 47, 1);
+SELECT pg_catalog.setval('public.category_category_id_seq', 44, true);
+
+
+--
+-- Name: endpoint_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+--
+
+SELECT pg_catalog.setval('public.endpoint_id_seq', 54, true);
+
+
+--
+-- Name: role_endpoint_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+--
+
+SELECT pg_catalog.setval('public.role_endpoint_id_seq', 59, true);
+
+
+--
+-- Name: role_id_seq; Type: SEQUENCE SET; Schema: public; Owner: admin
+--
+
+SELECT pg_catalog.setval('public.role_id_seq', 1, false);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
