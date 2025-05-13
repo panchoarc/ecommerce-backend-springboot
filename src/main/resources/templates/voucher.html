@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Comprobante de Compra</title>
+    <style>
+        /* Estilos para la página */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 13px;
+            color: #333333;
+            background: #ffffff;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #dddddd;
+        }
+
+        .header {
+            display: block;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 45px;
+        }
+
+        .logo-img {
+            width: 60px;
+            height: 60px;
+            background-color: #3498db;
+            border-radius: 50%;
+            margin-right: 10px;
+            text-align: center;
+            line-height: 60px;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 24px;
+            display: inline-block;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #3498db;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        .company-info {
+            font-size: 12px;
+            color: #333333;
+            padding-left: 30px;
+            display: inline-block;
+        }
+
+        .company-data{
+            padding-top: 30px;
+        }
+
+        .document-info {
+            display: inline-block;
+            text-align: right;
+            width: 40%;
+            float: right;
+            padding-right: 15px;
+        }
+
+        .date, .qr-info {
+            font-size: 13px;
+        }
+
+        .document-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #2c3e50;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            clear: both;
+        }
+
+        .section-title {
+            font-weight: bold;
+            font-size: 15px;
+            border-bottom: 1px solid #cccccc;
+            margin-top: 25px;
+            padding-bottom: 5px;
+            color: #2c3e50;
+        }
+
+        .section-title-icon {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #3498db;
+            margin-right: 10px;
+        }
+
+        .column-left {
+            width: 48%;
+            float: left;
+        }
+
+        .column-right {
+            width: 48%;
+            float: right;
+        }
+
+        .clearfix:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        td {
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .order-info, .customer-info {
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        table.items {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        table.items th {
+            background: #f8f9fa;
+            border: 1px solid #dddddd;
+            padding: 10px;
+            font-size: 13px;
+            text-align: left;
+            color: #2c3e50;
+        }
+
+        table.items td {
+            border: 1px solid #dddddd;
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        table.items tr:nth-child(even) td {
+            background-color: #f9f9f9;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .summary {
+            margin-top: 20px;
+            border: 1px solid #dddddd;
+            width: 50%;
+            float: right;
+        }
+
+        .summary td {
+            padding: 10px;
+        }
+
+        .summary .label {
+            text-align: right;
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+
+        .summary .value {
+            text-align: right;
+            font-weight: bold;
+        }
+
+        .info-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 3px solid #3498db;
+        }
+
+        .terms {
+            font-size: 11px;
+            color: #888888;
+            margin-top: 20px;
+            padding: 10px;
+            border-top: 1px dashed #dddddd;
+            line-height: 1.3;
+            clear: both;
+            overflow: hidden;
+        }
+
+        .text-primary {
+            color: #3498db;
+        }
+
+        .badge {
+            background-color: #3498db;
+            color: white;
+            padding: 3px 8px;
+            font-size: 11px;
+            display: inline-block;
+        }
+
+        .no-break {
+            page-break-inside: avoid;
+        }
+
+        .footer {
+            font-size: 12px;
+            color: #888888;
+            text-align: center;
+            margin-top: 40px;
+            border-top: 1px solid #dddddd;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="company-info">
+            <div class="logo-img">B</div>
+            <div class="logo-text">BuyIt</div>
+            <div class="company-data">
+                RUT: 12.345.678-9<br/>
+                Dirección Fiscal: Av. Principal 123, Ciudad<br/>
+                Email: contacto@buyit.com
+            </div>
+        </div>
+        <div class="document-info">
+            <div class="date">
+                <div>Fecha: <span th:text="${date}"></span></div>
+                <div>Hora: <span th:text="${time}"></span></div>
+            </div>
+            <div class="qr-info">
+                <div><strong>Comprobante Nº:</strong> <span th:text="${orderNumber}"></span></div>
+                <img class="qr-code-header" th:src="'data:image/png;base64,' + ${qrCode}" alt="QR Code" style="width: 80px; height: 80px;"/>
+            </div>
+        </div>
+    </div>
+
+    <div class="document-title">Comprobante de Compra</div>
+
+    <div class="clearfix">
+        <div class="column-left">
+            <div class="section-title">
+                <span class="section-title-icon"></span>
+                Datos del Cliente
+            </div>
+            <table class="customer-info">
+                <tr>
+                    <td><strong>Nombre:</strong> <span th:text="${customerName}"></span></td>
+                </tr>
+                <tr>
+                    <td><strong>Email:</strong> <span th:text="${customerEmail}"></span></td>
+                </tr>
+            </table>
+        </div>
+        <div class="column-right">
+            <div class="section-title">
+                <span class="section-title-icon"></span>
+                Dirección de Envío
+            </div>
+            <table class="customer-info">
+                <tr>
+                    <td><strong>Dirección:</strong> <span th:text="${shippingAddress}"></span></td>
+                </tr>
+                <tr>
+                    <td><strong>Ciudad:</strong> <span th:text="${shippingCity}"></span></td>
+                </tr>
+                <tr>
+                    <td><strong>Código Postal:</strong> <span th:text="${shippingZip}"></span></td>
+                </tr>
+                <tr>
+                    <td><strong>País:</strong> <span th:text="${shippingCountry}"></span></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="section-title">
+        <span class="section-title-icon"></span>
+        Detalles de la Orden
+    </div>
+    <table class="order-info">
+        <tr>
+            <td><strong>Orden Nº:</strong> <span th:text="${orderId}"></span></td>
+            <td><strong>Método de Pago:</strong> <span th:text="${paymentMethod}"></span></td>
+        </tr>
+        <tr>
+            <td><strong>Estado:</strong> <span class="badge" th:text="${paymentStatus}"></span></td>
+            <td th:if="${trackingNumber != null}"><strong>Nº de Seguimiento:</strong> <span th:text="${trackingNumber}"></span></td>
+        </tr>
+        <tr th:if="${trackingNumber != null}">
+            <td colspan="2"><strong>Método de Envío:</strong> <span th:text="${shippingMethod}"></span></td>
+        </tr>
+    </table>
+
+    <div class="section-title">
+        <span class="section-title-icon"></span>
+        Productos
+    </div>
+    <table class="items no-break">
+        <thead>
+        <tr>
+            <th>Producto</th>
+            <th class="right">Cantidad</th>
+            <th class="right">Precio Unitario</th>
+            <th class="right">Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${items}">
+            <td th:text="${item.product.name}"></td>
+            <td class="right" th:text="${item.quantity}"></td>
+            <td class="right" th:text="${item.priceAtPurchase} + ' $'"></td>
+            <td class="right" th:text="${item.priceAtPurchase * item.quantity} + ' $'"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="summary">
+        <table>
+            <tr>
+                <td class="label">Total</td>
+                <td class="value" th:text="${total} + ' $'"></td>
+            </tr>
+            <tr>
+                <td class="label">IVA (19%)</td>
+                <td class="value" th:text="${total *0.19} + ' $'"></td>
+            </tr>
+            <tr>
+                <td class="label">Total a Pagar</td>
+                <td class="value" th:text="${total *1.19} + ' $'"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="terms clearfix">
+        <p><strong>Condiciones:</strong></p>
+        <p>Este comprobante es válido para el pago de la compra realizada en BuyIt. Asegúrese de revisar las políticas de devolución en <span class="text-primary">www.buyit.com/terminos</span></p>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 BuyIt - Todos los derechos reservados.</p>
+    </div>
+</div>
+</body>
+</html>
