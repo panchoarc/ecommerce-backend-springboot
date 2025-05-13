@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -38,7 +37,7 @@ public class UpdateProductRequest {
     @JsonProperty("is_active")
     private Boolean isActive;
 
-    @NotNull(message = "category_ids needs at least one category")
-    @JsonProperty("category_ids")
-    private List<Long> categoryIds;
+    @NotNull(message = "category_id needs at least one category")
+    @JsonProperty("category_id")
+    private Long categoryId;
 }
