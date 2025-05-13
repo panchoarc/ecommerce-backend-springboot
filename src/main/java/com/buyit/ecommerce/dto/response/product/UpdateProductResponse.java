@@ -17,5 +17,6 @@ public class UpdateProductResponse {
     private String description;
     private BigDecimal price;
     private Integer stock;
+    private String img;
 
 }
