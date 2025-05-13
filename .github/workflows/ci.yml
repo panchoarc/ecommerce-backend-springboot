@@ -32,6 +32,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Install awscli-local
+        run: |
+          pip install awscli-local
       - name: Install yq
         run: |
           sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
