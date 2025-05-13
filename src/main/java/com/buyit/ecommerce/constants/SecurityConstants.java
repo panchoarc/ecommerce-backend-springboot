@@ -7,7 +7,7 @@ public class SecurityConstants {
     private SecurityConstants() {
     }
 
-    public static final List<String> PUBLIC_ROUTES = List.of("/actuator/**", "/v2/api-docs", "/v3/api-docs", "/redoc.html",
-            "/v3/api-docs/**", "/swagger-resources", "/swagger-resources/**", "/configuration/ui",
-            "/configuration/security", "/swagger-ui/**", "/webjars/**", "/swagger-ui.html", "/auth/**");
+    public static final List<String> SWAGGER_URLS = List.of("/v2/api-docs", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**");
+
+    public static final List<String> ACTUATOR_URLS =  List.of("/actuator/**");
 }
