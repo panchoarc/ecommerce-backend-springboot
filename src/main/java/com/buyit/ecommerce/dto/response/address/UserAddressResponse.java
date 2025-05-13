@@ -13,6 +13,9 @@ public class UserAddressResponse {
     @JsonProperty("id")
     private Long id;
 
+    @JsonProperty("alias")
+    private String alias;
+
     @JsonProperty("street")
     private String street;
 
