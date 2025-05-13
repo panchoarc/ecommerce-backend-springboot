@@ -1,9 +1,12 @@
 package com.buyit.ecommerce.dto.response.order;
 
 import com.buyit.ecommerce.dto.request.product.BuyedProductResponse;
+import com.buyit.ecommerce.dto.response.address.UserAddressResponse;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,8 +15,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class OrdersResponse {
-    
+public class OrderDetailsResponse {
+
     @JsonProperty("id")
     private Long orderId;
 
@@ -31,6 +34,9 @@ public class OrdersResponse {
     private LocalDateTime createdAt;
 
     @JsonProperty("products")
-    private List<BuyedProductResponse> products;
+    List<BuyedProductResponse> products;
 
+
+    @JsonProperty("address")
+    private UserAddressResponse address;
 }
