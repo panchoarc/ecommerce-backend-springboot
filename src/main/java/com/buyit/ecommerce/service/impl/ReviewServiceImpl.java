@@ -45,15 +45,12 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public List<ReviewResponse> getProductReviews(Long id) {
+    public List<ReviewResponse> getProductReviews(Long productId) {
 
-        Product dbProduct = productService.getProduct(id);
-        List<Review> reviews = reviewRepository.findByProduct(dbProduct);
-        List<ReviewResponse> mappedReviews = List.of();
-        if (!reviews.isEmpty()) {
-            mappedReviews = reviews.stream().map(reviewMapper::toReviewDTO).toList();
-        }
-        return mappedReviews;
+        List<Review> reviews = reviewRepository.findByProductWithUser(productId);
+        return reviews.stream()
+                .map(reviewMapper::toReviewDTO)
+                .toList();
 
     }
 
