@@ -55,7 +55,7 @@ jobs:
 
       - name: Replace client secrets in application-test.yml
         run: |
-          yq eval '.stripe.secret_key = "${{ secrets.STRIPE_API_KEY_TEST }}"' -i ./src/test/resources/application-test.yml
+          yq eval '.stripe.secret_key = "${{ secrets.STRIPE_API_KEY_TEST }}"' ./src/test/resources/application-test.example.yml > ./src/test/resources/application-test.yml
 
       - name: Grant execute permissions to Maven wrapper
         run: chmod +x ./mvnw
