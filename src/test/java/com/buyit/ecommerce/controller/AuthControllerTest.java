@@ -1,6 +1,5 @@
 package com.buyit.ecommerce.controller;
 
-import com.buyit.ecommerce.config.TestContainersConfig;
 import com.buyit.ecommerce.dto.request.UserLoginDTO;
 import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.service.AuthService;
@@ -9,10 +8,7 @@ import com.buyit.ecommerce.util.UserTestUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -35,7 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
-class AuthControllerTest extends TestContainersConfig {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -56,8 +53,9 @@ class AuthControllerTest extends TestContainersConfig {
 
     private static UserRegisterDTO userRegisterDTO;
 
+
     @BeforeAll
-    static void setUp() {
+    void setUp() {
         userRegisterDTO = new UserRegisterDTO();
         userRegisterDTO.setFirstName("Test");
         userRegisterDTO.setLastName("User");

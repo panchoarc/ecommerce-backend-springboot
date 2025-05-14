@@ -1,6 +1,5 @@
 package com.buyit.ecommerce.service;
 
-import com.buyit.ecommerce.config.TestContainersConfig;
 import com.buyit.ecommerce.dto.request.UserLoginDTO;
 import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.dto.request.address.CreateAddressRequest;
@@ -18,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Slf4j
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-class AddressServiceTest extends TestContainersConfig {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class AddressServiceTest {
 
     @Autowired
     private AddressService addressService;

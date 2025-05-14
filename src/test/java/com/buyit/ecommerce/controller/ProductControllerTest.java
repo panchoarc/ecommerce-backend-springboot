@@ -1,6 +1,5 @@
 package com.buyit.ecommerce.controller;
 
-import com.buyit.ecommerce.config.TestContainersConfig;
 import com.buyit.ecommerce.dto.request.category.CategoryRequest;
 import com.buyit.ecommerce.dto.request.product.CreateProductRequest;
 import com.buyit.ecommerce.dto.request.product.ProductRequest;
@@ -16,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,8 +43,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 @Slf4j
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Transactional
-class ProductControllerTest extends TestContainersConfig {
+class ProductControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -55,14 +56,17 @@ class ProductControllerTest extends TestContainersConfig {
     private static String adminToken;
     private static String userToken;
 
+    @Autowired
+    private UserTestUtils userTestUtils;
+
     @BeforeAll
-    static void setUp(@Autowired UserTestUtils userTestUtils) throws JsonProcessingException {
+    void setUp() throws JsonProcessingException {
         adminToken = userTestUtils.getAdminUserToken();
         userToken = userTestUtils.getUserToken();
     }
 
     @AfterAll
-    static void tearDown(@Autowired UserTestUtils userTestUtils) {
+    void tearDown() {
         userTestUtils.cleanUsers();
     }
 

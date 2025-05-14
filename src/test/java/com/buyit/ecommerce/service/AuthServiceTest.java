@@ -1,6 +1,5 @@
 package com.buyit.ecommerce.service;
 
-import com.buyit.ecommerce.config.TestContainersConfig;
 import com.buyit.ecommerce.dto.request.UserLoginDTO;
 import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.entity.User;
@@ -16,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @Slf4j
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
-class AuthServiceTest extends TestContainersConfig {
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class AuthServiceTest {
 
     @Autowired
     private AuthService authService;
@@ -139,7 +140,7 @@ class AuthServiceTest extends TestContainersConfig {
 
         Map<String, List<String>> errorMessages = errorMessagesUtil.getErrorMessages(exception);
 
-        log.info("ERRORS: {}",errorMessages);
+        log.info("ERRORS: {}", errorMessages);
 
         assertTrue(errorMessages.get("userName").contains(USERNAME_INVALID_LENGTH));
         assertTrue(errorMessages.get("password").contains(PASSWORD_LENGTH));
