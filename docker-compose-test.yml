@@ -42,9 +42,9 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "localstack_data-test:/var/lib/localstack"
-      - "./localstack/scripts/config-aws.sh:/etc/localstack/init/ready.d/config-aws.sh:ro"
-      - "./localstack/scripts/create-bucket.sh:/etc/localstack/init/ready.d/create-bucket.sh:ro"
-      - "./localstack/scripts/cors.json:/etc/localstack/init/ready.d/cors.json:ro"
+      - "./src/test/resources/localstack/scripts/config-aws.sh:/etc/localstack/init/ready.d/config-aws.sh:ro"
+      - "./src/test/resources/localstack/scripts/create-bucket.sh:/etc/localstack/init/ready.d/create-bucket.sh:ro"
+      - "./src/test/resources/localstack/scripts/cors.json:/etc/localstack/init/ready.d/cors.json:ro"
     restart: unless-stopped
 
 networks:
