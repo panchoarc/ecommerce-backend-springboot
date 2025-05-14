@@ -38,6 +38,7 @@ public class AwsConfig {
                     .region(Region.of(region))
                     .endpointOverride(URI.create(localStackEndpoint)) // Conexión a LocalStack
                     .credentialsProvider(credentialsProvider())
+                    .forcePathStyle(true)
                     .build();
         } else {
             return S3Client.builder()
