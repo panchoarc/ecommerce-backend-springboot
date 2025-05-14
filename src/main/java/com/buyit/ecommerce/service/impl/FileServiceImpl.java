@@ -30,16 +30,16 @@ public class FileServiceImpl implements FileService {
     public String uploadFile(MultipartFile file) {
         String originalFileName = file.getOriginalFilename();
         String fileExtension = originalFileName != null ? originalFileName.substring(originalFileName.lastIndexOf(".")) : "";
-        String uniqueFileName = UUID.randomUUID() + fileExtension; // Evita colisiones de nombres
+        String uniqueFileName = UUID.randomUUID() + fileExtension;
 
         try {
-            byte[] fileBytes = file.getBytes(); // Convertir a bytes correctamente
+            byte[] fileBytes = file.getBytes();
+
             PutObjectRequest request = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .acl(ObjectCannedACL.PUBLIC_READ)
                     .key(uniqueFileName)
                     .contentType(file.getContentType())
-                    .contentLength((long) fileBytes.length) // Asegurar que el tamaño sea correcto
                     .build();
 
             s3Client.putObject(request, RequestBody.fromBytes(fileBytes));
