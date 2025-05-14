@@ -3,8 +3,11 @@
 # Detectar entorno y configurar variables apropiadamente
 echo "===> [Config] Configurando AWS CLI para el entorno actual..."
 
+
+HOST=$(hostname)
+
 # Valores por defecto (entorno local)
-AWS_ENDPOINT_DEFAULT="http://s3.localhost.localstack.cloud:4566"
+AWS_ENDPOINT_DEFAULT="http://${HOST}:4566"
 AWS_REGION_DEFAULT="us-east-1"
 AWS_ACCESS_KEY_ID_DEFAULT="test"
 AWS_SECRET_ACCESS_KEY_DEFAULT="test"
@@ -38,7 +41,7 @@ if [ "$USE_LOCALSTACK" = "true" ]; then
         awslocal configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
         awslocal configure set region ${AWS_REGION}
         awslocal configure set s3.endpoint_url ${AWS_ENDPOINT}
-        awslocal configure set default.s3.addressing_style virtual
+        awslocal configure set default.s3.addressing_style path
 
         # Crear función para usar awslocal en lugar de aws
         aws() {
