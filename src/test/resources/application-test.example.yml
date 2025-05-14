@@ -19,11 +19,12 @@ spring:
         jwt:
           issuer-uri: ${keycloak.server-url}/realms/buyit
           jwk-set-uri: ${spring.security.oauth2.resourceserver.jwt.issuer-uri}/protocol/openid-connect/certs
+
   datasource:
+    url: jdbc:postgresql://localhost:5432/ecommerce_db
+    username: admin
+    password: admin
     driver-class-name: org.postgresql.Driver
-    username:
-    password:
-    url:
   jpa:
     hibernate:
       ddl-auto: create # Usa 'create', 'update' o 'validate' según tus necesidades para pruebas
@@ -48,8 +49,9 @@ jwt:
     converter:
       resource-id: buyit-client
       principal-attribute: preferred_username
+
 keycloak:
-  server-url: ${keycloak.auth-server-url}
+  server-url: http://localhost:9080
   client-id: ${jwt.auth.converter.resource-id}
   email-verified: true
   realm:
@@ -65,13 +67,14 @@ logging:
     org.springframework.security: DEBUG
 aws:
   s3:
-    useLocalStack:
-    bucket-name:
-    localstackEndpoint:
-    region:
-    access-key:
-    secret-key:
+    useLocalStack: true
+    bucket-name: ecommerce-buyit-bucket
+    localstackEndpoint: http://s3.localhost.localstack.cloud:4566
+    region: us-east-1
+    access-key: "test"
+    secret-key: "test"
+
 frontend:
-  url:
+  url: http://localhost:5173
 stripe:
-  secret_key:
+  secret_key: DUMMY

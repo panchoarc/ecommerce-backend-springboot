@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ecommerce_db
+    volumes:
+      - postgres_data-test:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - shared-network
+    restart: unless-stopped
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    command:
+      - start-dev
+      - --import-realm
+    ports:
+      - "9080:8080"
+
+    volumes:
+      - ./src/test/resources/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    networks:
+      - shared-network
+    restart: unless-stopped
+
+  localstack:
+    image: localstack/localstack:4
+    environment:
+      - SERVICES=s3,sqs,dynamodb
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - PERSISTENCE=1
+    ports:
+      - "4566:4566"            # LocalStack Gateway
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "localstack_data-test:/var/lib/localstack"
+      - "./localstack/scripts/config-aws.sh:/etc/localstack/init/ready.d/config-aws.sh:ro"
+      - "./localstack/scripts/create-bucket.sh:/etc/localstack/init/ready.d/create-bucket.sh:ro"
+      - "./localstack/scripts/cors.json:/etc/localstack/init/ready.d/cors.json:ro"
+    restart: unless-stopped
+
+networks:
+  shared-network:
+    driver: bridge
+
+volumes:
+  postgres_data-test:
+  localstack_data-test:
