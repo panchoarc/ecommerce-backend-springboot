@@ -1,31 +1,25 @@
 #!/bin/bash
 
-echo "===> [S3] Configurando LocalStack (Bucket y CORS)..."
+echo "===> [S3] Creando bucket en LocalStack..."
 
+# Configuración
 BUCKET_NAME="ecommerce-buyit-bucket"
+AWS_ENDPOINT="http://s3.localhost.localstack.cloud:4566"
 
-# Detectar el host de LocalStack (localstack o localhost)
-LOCALSTACK_HOSTNAME=${LOCALSTACK_HOST:-"localhost"}
-AWS_ENDPOINT="http://${LOCALSTACK_HOSTNAME}:4566"
+# Crear bucket
+awslocal --endpoint-url=${AWS_ENDPOINT} s3api create-bucket --bucket ${BUCKET_NAME}
 
-echo "===> [S3] Usando endpoint: $AWS_ENDPOINT"
-
-# Paso 1: Esperar a que LocalStack esté listo
-echo "===> [S3] Esperando a que LocalStack (S3) esté disponible en $AWS_ENDPOINT..."
-
-echo "===> [S3] LocalStack (S3) está listo!"
-
-# Paso 2: Crear bucket (ignorar error si ya existe)
-awslocal --endpoint-url="$AWS_ENDPOINT" s3api create-bucket --bucket "$BUCKET_NAME" || true
-
-# Paso 3: Configurar CORS
+# Configurar CORS
 echo "===> [S3] Configurando CORS para el bucket..."
-awslocal --endpoint-url="$AWS_ENDPOINT" s3api put-bucket-cors \
-  --bucket "$BUCKET_NAME" \
+awslocal --endpoint-url=${AWS_ENDPOINT} s3api put-bucket-cors \
+  --bucket ${BUCKET_NAME} \
   --cors-configuration file:///etc/localstack/init/ready.d/cors.json
+echo "===> [S3] CORS configurado correctamente."
 
-# Paso 4: Mostrar buckets existentes
+# Listar buckets
 echo "===> [S3] Buckets existentes:"
-awslocal --endpoint-url="$AWS_ENDPOINT" s3api list-buckets
+aws --endpoint-url=${AWS_ENDPOINT} s3api list-buckets
 
-echo "===> [S3] Bucket disponible en: $AWS_ENDPOINT/$BUCKET_NAME"
+# Mostrar URL
+echo "===> [S3] Bucket disponible en:"
+echo "http://${BUCKET_NAME}.s3.localhost.localstack.cloud:4566"
