@@ -3,10 +3,19 @@
 # Detectar entorno y configurar variables apropiadamente
 echo "===> [Config] Configurando AWS CLI para el entorno actual..."
 
+# Función para detectar si estamos en GitHub Actions
+is_github_actions() {
+    [ -n "$GITHUB_ACTIONS" ]
+}
 
-HOST=$(hostname)
+# Asignar HOST según entorno
+if is_github_actions; then
+    HOST=$(hostname)
+else
+    HOST="localhost"
+fi
 
-# Valores por defecto (entorno local)
+# Valores por defecto (entorno local o GitHub Actions)
 AWS_ENDPOINT_DEFAULT="http://${HOST}:4566"
 AWS_REGION_DEFAULT="us-east-1"
 AWS_ACCESS_KEY_ID_DEFAULT="test"
@@ -24,11 +33,6 @@ USE_LOCALSTACK="${USE_LOCALSTACK:-$USE_LOCALSTACK_DEFAULT}"
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
 export AWS_REGION
-
-# Función para detectar si estamos en GitHub Actions
-is_github_actions() {
-    [ -n "$GITHUB_ACTIONS" ]
-}
 
 # Configurar AWS CLI basado en el entorno
 if [ "$USE_LOCALSTACK" = "true" ]; then
