@@ -12,6 +12,7 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -33,7 +34,10 @@ jobs:
           cache: maven
 
       - name: Set AWS_S3_ENDPOINT for runner access
-        run: echo "AWS_S3_ENDPOINT=http://localhost:4566" >> $GITHUB_ENV
+        run: | 
+          echo "AWS_S3_ENDPOINT=http://localhost:4566" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=test" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=test" >> $GITHUB_ENV
 
       - name: Install yq & jq
         run: |
