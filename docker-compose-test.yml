@@ -34,14 +34,10 @@ services:
     image: localstack/localstack:4
     environment:
       - SERVICES=s3,sqs,dynamodb
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - PERSISTENCE=1
     ports:
       - "4566:4566"            # LocalStack Gateway
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - "localstack_data-test:/var/lib/localstack"
       - "./src/test/resources/localstack/scripts/config-aws.sh:/etc/localstack/init/ready.d/config-aws.sh:ro"
       - "./src/test/resources/localstack/scripts/create-bucket.sh:/etc/localstack/init/ready.d/create-bucket.sh:ro"
       - "./src/test/resources/localstack/scripts/cors.json:/etc/localstack/init/ready.d/cors.json:ro"
