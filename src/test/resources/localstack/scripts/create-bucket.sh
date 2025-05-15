@@ -10,12 +10,6 @@ BUCKET_NAME="ecommerce-buyit-bucket"
 
 echo "===> [S3] AWS_ENDPOINT actual es: ${AWS_ENDPOINT}"
 
-# Verificar que awslocal esté disponible
-if ! command -v awslocal &> /dev/null; then
-    echo "===> [S3] ERROR: awslocal no está instalado. Instálalo con: pip install localstack-client"
-    exit 1
-fi
-
 # Crear bucket S3
 aws --endpoint-url="${AWS_ENDPOINT}" s3api create-bucket --bucket ${BUCKET_NAME}
 
@@ -33,4 +27,4 @@ aws --endpoint-url="${AWS_ENDPOINT}" s3api list-buckets
 
 # Mostrar URL informativa
 echo "===> [S3] Bucket disponible en:"
-echo "${AWS_ENDPOINT}"
+echo "${AWS_ENDPOINT}/${BUCKET_NAME}"

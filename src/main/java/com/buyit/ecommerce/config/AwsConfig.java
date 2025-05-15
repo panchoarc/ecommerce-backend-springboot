@@ -8,6 +8,8 @@ import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.S3Configuration;
 
 import java.net.URI;
 
@@ -33,19 +35,19 @@ public class AwsConfig {
 
     @Bean
     public S3Client s3Client() {
+        S3ClientBuilder builder = S3Client.builder()
+                .region(Region.of(region))
+                .credentialsProvider(credentialsProvider());
+
         if (useLocalStack) {
-            return S3Client.builder()
-                    .region(Region.of(region))
-                    .endpointOverride(URI.create(localStackEndpoint)) // Conexión a LocalStack
-                    .credentialsProvider(credentialsProvider())
-                    .forcePathStyle(true)
-                    .build();
-        } else {
-            return S3Client.builder()
-                    .region(Region.of(region))
-                    .credentialsProvider(credentialsProvider()) // Usa credenciales de AWS reales
-                    .build();
+            builder = builder
+                    .endpointOverride(URI.create(localStackEndpoint))
+                    .serviceConfiguration(S3Configuration.builder()
+                            .pathStyleAccessEnabled(true)
+                            .build());
         }
+
+        return builder.build();
     }
 
     @Bean
