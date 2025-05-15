@@ -69,7 +69,7 @@ aws:
   s3:
     useLocalStack: true
     bucket-name: ecommerce-buyit-bucket
-    localstackEndpoint: http://localhost:4566
+    localstackEndpoint: ${LOCALSTACK_ENDPOINT:http://localhost:4566}
     region: us-east-1
     access-key: "test"
     secret-key: "test"

@@ -32,6 +32,12 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Set LOCALSTACK_HOST for docker-compose network
+        run: echo "LOCALSTACK_HOST=localstack" >> $GITHUB_ENV
+
+      - name: Set LOCALSTACK_ENDPOINT for GitHub Actions
+        run: echo "LOCALSTACK_ENDPOINT=http://localstack:4566" >> $GITHUB_ENV
+
       - name: Install yq & jq
         run: |
           sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq
