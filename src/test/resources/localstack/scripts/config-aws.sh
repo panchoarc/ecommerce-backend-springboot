@@ -11,28 +11,15 @@ AWS_REGION="us-east-1"
 AWS_ACCESS_KEY_ID="test"
 AWS_SECRET_ACCESS_KEY="test"
 
-# Exportar para AWS CLI
+# Exportar variables de entorno para AWS CLI
 export AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY
 export AWS_REGION
 
 echo "===> [Config] Usando LocalStack en $AWS_ENDPOINT"
 
-# Verificar si awslocal está disponible
-if command -v awslocal &> /dev/null; then
-    echo "===> [Config] awslocal detectado. Configurando..."
-else
-    echo "===> [Config] ERROR: awslocal no está instalado. Instálalo con: pip install localstack-client"
-    exit 1
-fi
+# Probar que AWS CLI funcione
+echo "===> [Config] Listando buckets en LocalStack (si hay)..."
+aws --endpoint-url="${AWS_ENDPOINT}" s3api list-buckets
 
-# Configurar CLI (aunque awslocal ya respeta env vars, lo dejamos explícito)
-awslocal configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
-awslocal configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
-awslocal configure set region ${AWS_REGION}
-awslocal configure set s3.endpoint_url ${AWS_ENDPOINT}
-awslocal configure set default.s3.addressing_style path
-
-# Mostrar configuración
-echo "===> [Config] Configuración actual:"
-awslocal configure list
+echo "===> [Config] Configuración aplicada correctamente."

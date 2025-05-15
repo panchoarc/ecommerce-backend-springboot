@@ -17,11 +17,11 @@ if ! command -v awslocal &> /dev/null; then
 fi
 
 # Crear bucket S3
-awslocal --endpoint-url="${AWS_ENDPOINT}" s3api create-bucket --bucket ${BUCKET_NAME}
+aws --endpoint-url="${AWS_ENDPOINT}" s3api create-bucket --bucket ${BUCKET_NAME}
 
 # Configurar CORS para el bucket
 echo "===> [S3] Configurando CORS para el bucket..."
-awslocal --endpoint-url="${AWS_ENDPOINT}" s3api put-bucket-cors \
+aws --endpoint-url="${AWS_ENDPOINT}" s3api put-bucket-cors \
   --bucket ${BUCKET_NAME} \
   --cors-configuration file:///etc/localstack/init/ready.d/cors.json
 
@@ -29,7 +29,7 @@ echo "===> [S3] CORS configurado correctamente."
 
 # Listar buckets existentes
 echo "===> [S3] Buckets existentes:"
-awslocal --endpoint-url="${AWS_ENDPOINT}" s3api list-buckets
+aws --endpoint-url="${AWS_ENDPOINT}" s3api list-buckets
 
 # Mostrar URL informativa
 echo "===> [S3] Bucket disponible en:"
