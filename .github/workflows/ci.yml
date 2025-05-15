@@ -78,8 +78,8 @@ jobs:
 
       - name: Wait for LocalStack to be ready
         run: |
-            echo "Waiting for LocalStack at $LOCALSTACK_ENDPOINT"
-            until curl -s -f -o /dev/null $LOCALSTACK_ENDPOINT/_localstack/health; do
+            echo "Waiting for LocalStack at AWS_S3_ENDPOINT"
+            until curl -s -f -o /dev/null AWS_S3_ENDPOINT/_localstack/health; do
               echo "LocalStack not ready yet..."
               sleep 5
             done
