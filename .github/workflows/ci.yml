@@ -32,11 +32,8 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Set LOCALSTACK_HOST for docker-compose network
-        run: echo "LOCALSTACK_HOST=localstack" >> $GITHUB_ENV
-
-      - name: Set LOCALSTACK_ENDPOINT for GitHub Actions
-        run: echo "LOCALSTACK_ENDPOINT=http://localstack:4566" >> $GITHUB_ENV
+      - name: Set AWS_S3_ENDPOINT for runner access
+        run: echo "AWS_S3_ENDPOINT=http://localhost:4566" >> $GITHUB_ENV
 
       - name: Install yq & jq
         run: |
@@ -81,13 +78,12 @@ jobs:
 
       - name: Wait for LocalStack to be ready
         run: |
-          URL="http://localhost:4566/_localstack/health"
-          echo "Waiting for LocalStack at $URL"
-          until curl -s -f -o /dev/null $URL; do
-          echo "LocalStack not ready yet..."
-          sleep 5
-          done
-          echo "LocalStack is up!"
+            echo "Waiting for LocalStack at $LOCALSTACK_ENDPOINT"
+            until curl -s -f -o /dev/null $LOCALSTACK_ENDPOINT/_localstack/health; do
+              echo "LocalStack not ready yet..."
+              sleep 5
+            done
+            echo "LocalStack is up!"
           
 
       - name: Run Tests with Maven

@@ -61,15 +61,12 @@ keycloak:
 logging:
   level:
     org.hibernate.SQL: OFF # Habilitar el logging de las consultas SQL para depurar
-    #org.testcontainers: OFF
 
-    #tc.testcontainers: OFF
-    org.springframework.security: DEBUG
 aws:
   s3:
     useLocalStack: true
     bucket-name: ecommerce-buyit-bucket
-    localstackEndpoint: ${LOCALSTACK_ENDPOINT:http://localhost:4566}
+    localstackEndpoint: ${AWS_S3_ENDPOINT:http://localhost:4566}
     region: us-east-1
     access-key: "test"
     secret-key: "test"
