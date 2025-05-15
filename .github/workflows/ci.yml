@@ -84,7 +84,17 @@ jobs:
             sleep 5
           done
           echo "LocalStack is up!"
-          
+
+      - name: Wait for S3 Bucket to exist in LocalStack
+        run: |
+          echo "Waiting for S3 bucket 'ecommerce-buyit-bucket' to exist in LocalStack..."
+          until aws --endpoint-url=$AWS_S3_ENDPOINT s3api head-bucket --bucket ecommerce-buyit-bucket 2>/dev/null; do
+            echo "Bucket not ready yet..."
+            sleep 3
+          done
+          echo "Bucket is ready!"
+      
+      
 
       - name: Run Tests with Maven
         run: ./mvnw verify --batch-mode
