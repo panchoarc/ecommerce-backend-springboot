@@ -104,6 +104,7 @@ public class ProductController {
     }
 
 
+    @Public
     @GetMapping("/{id}/reviews")
     @ResponseStatus(HttpStatus.OK)
     public ApiResponse<List<ReviewResponse>> getProductReviews(@PathVariable("id") Long id) {
