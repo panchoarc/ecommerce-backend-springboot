@@ -4,6 +4,7 @@ server:
     context-path: /api
 
 spring:
+
   scheduling:
     cron:
       backup-cleanup: "0 */5 * * * *"
@@ -42,7 +43,19 @@ spring:
         use_sql_comments: false
         generate_statistics: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
-    open-in-view: false  # Best practice to avoid LazyInitializationException`
+    open-in-view: false  # Best practice to avoid LazyInitializationException
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: DUMMY
+    password: DUMMY
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 
 jwt:
   auth:
@@ -75,3 +88,19 @@ aws:
 logging:
   level:
     org.springframework.http: debug
+
+
+frontend:
+  url: http://localhost:5173
+
+stripe:
+  secret_key: DUMMY
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    prometheus:
+      enabled: true
