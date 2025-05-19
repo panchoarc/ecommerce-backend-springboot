@@ -63,7 +63,11 @@ jobs:
 
       - name: Replace client secrets in application-test.yml
         run: |
-          yq eval '.stripe.secret_key = "${{ secrets.STRIPE_API_KEY_TEST }}"' ./src/test/resources/application-test.example.yml > ./src/test/resources/application-test.yml
+          yq eval '.stripe.secret_key = "${{ secrets.STRIPE_API_KEY_TEST }}" |
+                   .spring.mail.host = "${{ 'smtp.gmail.com'}}" |
+                   .spring.mail.username = "${{secrets.GOOGLE_SMTP_EMAIL}}" |
+                   .spring.mail.password = "${{ secrets.GOOGLE_SMTP_PASSWORD}}"' \
+          ./src/test/resources/application-test.example.yml > ./src/test/resources/application-test.yml
 
       - name: Grant execute permissions to Maven wrapper
         run: chmod +x ./mvnw

@@ -44,6 +44,18 @@ spring:
     enabled: false
     change-log: classpath:/db/changelog/db.changelog-master.yaml # Cambia si tienes un changelog específico para pruebas
     drop-first: false # Eliminar las tablas antes de cada ejecución para asegurar que la base esté limpia
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: 1lfrios2009@gmail.com
+    password: kodaeksnfhjxesva
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 jwt:
   auth:
     converter:
@@ -75,3 +87,12 @@ frontend:
   url: http://localhost:5173
 stripe:
   secret_key: DUMMY
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  endpoint:
+    prometheus:
+      enabled: true
