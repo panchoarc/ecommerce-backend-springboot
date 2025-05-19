@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -259,8 +258,7 @@ class CategoryControllerTest {
     }
 
 
-    private @NotNull CreateCategoryResponse createCategory(CreateCategoryRequest request) throws Exception {
-
+    private CreateCategoryResponse createCategory(CreateCategoryRequest request) throws Exception {
         String categoryJson = objectMapper.writeValueAsString(request);
 
         MvcResult createdResult = mockMvc.perform(post("/category")
