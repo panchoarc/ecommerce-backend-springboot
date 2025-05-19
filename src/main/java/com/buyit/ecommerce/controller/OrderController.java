@@ -6,6 +6,7 @@ import com.buyit.ecommerce.dto.response.order.OrderDetailsResponse;
 import com.buyit.ecommerce.dto.response.order.OrderResponse;
 import com.buyit.ecommerce.dto.response.order.OrdersResponse;
 import com.buyit.ecommerce.service.OrderService;
+import com.buyit.ecommerce.service.PdfGeneratorService;
 import com.buyit.ecommerce.service.UserService;
 import com.buyit.ecommerce.service.VoucherService;
 import com.buyit.ecommerce.util.ApiResponse;
@@ -35,6 +36,7 @@ public class OrderController {
     private final UserService userService;
 
     private final VoucherService voucherService;
+    private final PdfGeneratorService pdfGeneratorService;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)

@@ -1,9 +1,6 @@
 package com.buyit.ecommerce.exception;
 
-import com.buyit.ecommerce.exception.custom.InsufficientQuantityException;
-import com.buyit.ecommerce.exception.custom.ResourceExistException;
-import com.buyit.ecommerce.exception.custom.ResourceIllegalState;
-import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
+import com.buyit.ecommerce.exception.custom.*;
 import com.buyit.ecommerce.util.ApiResponse;
 import com.buyit.ecommerce.util.ResponseBuilder;
 import org.springframework.core.annotation.Order;
@@ -52,6 +49,24 @@ public class BusinessExceptionHandler {
         errors.put(MESSAGE, ex.getMessage());
 
         return ResponseBuilder.error("Insufficient quantity.", errors);
+    }
+
+    @ExceptionHandler(VoucherNotGeneratedException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiResponse<Void> handleVoucherNotGeneratedException(VoucherNotGeneratedException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put(MESSAGE, ex.getMessage());
+
+        return ResponseBuilder.error("There's an error occurred with voucher", errors);
+    }
+
+    @ExceptionHandler(EmailNotSendException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ApiResponse<Void> handleEmailNotSendException(EmailNotSendException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put(MESSAGE, ex.getMessage());
+
+        return ResponseBuilder.error("There's a error occurred with mail", errors);
     }
 
 }
