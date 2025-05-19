@@ -46,6 +46,8 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(SWAGGER_URLS.toArray(new String[0]))
                         .permitAll()
+                        .requestMatchers("/actuator/**")
+                        .permitAll()
                         .anyRequest()
                         .authenticated())
                 .oauth2ResourceServer(oauth -> oauth
