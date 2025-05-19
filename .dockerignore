@@ -1,0 +1,31 @@
+# Ignorar control de versiones
+.git
+.gitignore
+
+# Ignorar IDEs y herramientas de desarrollo
+.idea/
+.vscode/
+*.iml
+
+# Ignorar carpetas de build locales
+target/
+build/
+out/
+
+# Ignorar archivos temporales y logs
+*.log
+*.tmp
+*.bak
+*.swp
+*.swo
+*.pid
+
+# Ignorar caché de herramientas
+.mvn/
+.gradle/
+
+# Otros archivos irrelevantes
+Dockerfile
+.dockerignore
+README.md
+*.md
