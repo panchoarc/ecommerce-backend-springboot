@@ -1,21 +1,12 @@
 package com.buyit.ecommerce.service.impl;
 
 import com.buyit.ecommerce.dto.response.order.OrderDetailsDTO;
-import com.buyit.ecommerce.service.OrderService;
-import com.buyit.ecommerce.service.QRCodeService;
-import com.buyit.ecommerce.service.VoucherService;
-import com.google.zxing.WriterException;
-import com.itextpdf.html2pdf.ConverterProperties;
-import com.itextpdf.html2pdf.HtmlConverter;
+import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
+import com.buyit.ecommerce.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.Context;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
@@ -23,53 +14,48 @@ import java.time.format.DateTimeFormatter;
 public class VoucherServiceImpl implements VoucherService {
 
     private final OrderService orderService;
-    private final TemplateEngine templateEngine;
     private final QRCodeService qrCodeService;
+    private final EmailService emailService;
+    private final PdfGeneratorService pdfGeneratorService;
+
+    private final VoucherHtmlGeneratorService voucherHtmlGeneratorService;
+
+
+    @Value("${frontend.url}")
+    private String frontendUrl;
 
     @Override
-    public byte[] generateVoucher(String keycloakUserId, String orderNumber) throws IOException, WriterException {
+    public byte[] generateVoucher(String keycloakUserId, String orderNumber) {
+        try {
+            // Obtener datos de orden
+            OrderDetailsDTO orderDetails = orderService.getVoucherData(keycloakUserId, orderNumber);
 
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+            // Generar QR
+            String qrRedirect = frontendUrl + "/my-orders/" + orderNumber;
+            String qrCode = qrCodeService.generateQRCodeImage(qrRedirect);
 
-        OrderDetailsDTO response = orderService.getVoucherData(keycloakUserId, orderNumber);
+            // Generar HTML
+            String html = voucherHtmlGeneratorService.generateVoucherHtml(orderDetails, qrCode);
 
-        String qrRedirect = "CUALQUIER COSA";
+            // Generar PDF
+            byte[] pdfBytes = pdfGeneratorService.generateFromHtml(html);
 
-        String qrcode = qrCodeService.generateQRCodeImage(qrRedirect);
+            // Enviar correo
+            emailService.sendOrderDocument(
+                    orderDetails.getUser().getEmail(),
+                    "Tu comprobante de orden #" + orderNumber,
+                    "Adjunto encontrarás tu comprobante de pago. Escanea el QR para ver el detalle de tu orden.",
+                    pdfBytes
+            ).exceptionally(ex -> {
+                log.error("Error enviando comprobante al correo: {}", ex.getMessage(), ex);
+                return null;
+            });
 
-        log.info("Voucher generated for orderNumber: {}", orderNumber);
-        log.info("Orders: {}", response);
+            return pdfBytes;
 
-        Context context = new Context();
-
-        context.setVariable("orderId", response.getOrderNumber());
-        context.setVariable("orderNumber", orderNumber);
-// Obtener la fecha y la hora por separado
-        context.setVariable("date", response.getCreatedAt().toLocalDate().format(dateFormatter));
-        context.setVariable("time", response.getCreatedAt().toLocalTime().format(timeFormatter));
-        context.setVariable("items", response.getItems());
-        context.setVariable("customerName", response.getUser().getFullName());
-        context.setVariable("customerEmail", response.getUser().getEmail());
-        context.setVariable("total", response.getTotalAmount());
-        context.setVariable("shippingAddress", response.getAddress().getStreet());
-        context.setVariable("shippingCity", response.getAddress().getCity());
-        context.setVariable("shippingZip", response.getAddress().getPostalCode());
-        context.setVariable("shippingCountry", response.getAddress().getCountry());
-        context.setVariable("paymentMethod", "Card");
-        context.setVariable("paymentStatus", response.getStatus());
-        context.setVariable("qrCode", qrcode);
-
-        String html = templateEngine.process("voucher", context);
-
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            ConverterProperties converterProperties = new ConverterProperties();
-            converterProperties.setBaseUri("classpath:/templates/");
-            HtmlConverter.convertToPdf(html, outputStream, converterProperties);
-            return outputStream.toByteArray();
         } catch (Exception e) {
-            throw new RuntimeException("Error generando PDF", e);
+            log.error("Error generando y enviando comprobante", e);
+            throw new ResourceNotFoundException("Error generando y enviando comprobante");
         }
     }
 }
