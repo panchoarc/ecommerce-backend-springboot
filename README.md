@@ -1,5 +1,8 @@
 # eCommerce Backend - Spring Boot
 
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/panchoarc/ecommerce-backend-springboot)
+
 Este proyecto es un backend para un eCommerce desarrollado con **Spring Boot**, **PostgreSQL** y **Docker**. Proporciona una API REST para la gestión de productos, usuarios y pedidos.
 
 ## 📌 Tecnologías Utilizadas
@@ -11,6 +14,7 @@ Este proyecto es un backend para un eCommerce desarrollado con **Spring Boot**, 
 - **Swagger** (para documentación de la API)
 - **Lombok** (para reducir código repetitivo)
 - **MapStruct** (para mapeo de DTOs)
+- **Micrometer** (para métricas)
 
 ## 🚀 Instalación y Configuración
 
@@ -32,8 +36,8 @@ docker-compose up -d
 ```
 Esto levantará la base de datos PostgreSQL y el servicio de Keycloak, para los cuales existen volúmenes para persistencia de datos.
 
-### 3️⃣ Configurar el archivo `application.yml`
-Modifica el archivo `src/main/resources/application.yml` si es necesario, asegurándote de que las credenciales y la URL de la base de datos sean correctas.
+### 3️⃣ Configurar el archivo `application-dev.example.yml`
+Modifica el archivo `src/main/resources/application-dev.example.yml y conviertelo a application-dev.yml con sus respectivas credenciales` si es necesario, asegurándote de que las credenciales y la URL de la base de datos sean correctas.
 
 ### 4️⃣ Ejecutar la aplicación
 ```bash
