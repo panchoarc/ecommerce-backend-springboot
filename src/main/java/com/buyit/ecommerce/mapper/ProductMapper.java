@@ -63,7 +63,7 @@ public interface ProductMapper {
 
     default Long getFirstCategoryId(Product product) {
         if (product.getCategories() != null && !product.getCategories().isEmpty()) {
-            ProductCategory firstCategory = product.getCategories().get(0);
+            ProductCategory firstCategory = product.getCategories().stream().findFirst().orElse(null);
             if (firstCategory.getCategory() != null) {
                 return firstCategory.getCategory().getCategoryId();
             }
