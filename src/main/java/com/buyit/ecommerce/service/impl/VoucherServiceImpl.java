@@ -45,11 +45,7 @@ public class VoucherServiceImpl implements VoucherService {
                     orderDetails.getUser().getEmail(),
                     "Tu comprobante de orden #" + orderNumber,
                     "Adjunto encontrarás tu comprobante de pago. Escanea el QR para ver el detalle de tu orden.",
-                    pdfBytes
-            ).exceptionally(ex -> {
-                log.error("Error enviando comprobante al correo: {}", ex.getMessage(), ex);
-                return null;
-            });
+                    pdfBytes).join();
 
             return pdfBytes;
 
