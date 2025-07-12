@@ -2,7 +2,6 @@ package com.buyit.ecommerce.config;
 
 import com.buyit.ecommerce.security.CustomAccessDeniedHandler;
 import com.buyit.ecommerce.security.CustomAuthenticationEntryPoint;
-import com.buyit.ecommerce.service.EndpointService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -14,8 +13,6 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
-import java.util.List;
 
 import static com.buyit.ecommerce.constants.SecurityConstants.SWAGGER_URLS;
 
@@ -32,24 +29,17 @@ public class SecurityConfig {
 
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
-    private final EndpointService endpointService;
-
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
-        List<String> publicEndpoints = endpointService.getPublicEndpoints();
-
         return httpSecurity
                 .authorizeHttpRequests(http -> http
-                        .requestMatchers(publicEndpoints.toArray(new String[0]))
-                        .permitAll()
                         .requestMatchers(SWAGGER_URLS.toArray(new String[0]))
                         .permitAll()
                         .requestMatchers("/actuator/**")
                         .permitAll()
                         .anyRequest()
-                        .authenticated())
+                        .permitAll())
                 .oauth2ResourceServer(oauth -> oauth
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
                 .exceptionHandling(exception -> exception
