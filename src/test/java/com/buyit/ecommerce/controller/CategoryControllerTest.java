@@ -1,5 +1,6 @@
 package com.buyit.ecommerce.controller;
 
+import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.dto.request.category.CategoryRequest;
 import com.buyit.ecommerce.dto.request.category.CreateCategoryRequest;
 import com.buyit.ecommerce.dto.request.category.UpdateCategoryRequest;
@@ -8,7 +9,6 @@ import com.buyit.ecommerce.util.UserTestUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -23,6 +23,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.UUID;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,7 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 @Slf4j
-@Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CategoryControllerTest {
 
@@ -51,8 +52,11 @@ class CategoryControllerTest {
 
     @BeforeAll
     void setUp() throws JsonProcessingException {
-        adminToken = userTestUtils.getAdminUserToken();
-        userToken = userTestUtils.getUserToken();
+        UserRegisterDTO userRegisterDTO = userTestUtils.getUserCredentials();
+        UserRegisterDTO adminRegisterDTO = userTestUtils.getAdminCredentials();
+
+        adminToken = userTestUtils.getToken(adminRegisterDTO);
+        userToken = userTestUtils.getToken(userRegisterDTO);
     }
 
     @AfterAll
@@ -65,7 +69,7 @@ class CategoryControllerTest {
 
         mockMvc.perform(post("/category/search")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -88,24 +92,18 @@ class CategoryControllerTest {
     @Test
     void givenNoToken_whenGetOneCategory_thenUnauthorized() throws Exception {
 
-        CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
-        categoryRequest.setCategoryName("CATEGORY 1");
-        categoryRequest.setDescription("Description 1");
-
+        CreateCategoryRequest categoryRequest = createCategoryRequest();
         CreateCategoryResponse createdCategory = createCategory(categoryRequest);
 
         mockMvc.perform(get("/category/{id}", createdCategory.getId())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk());
     }
 
     @Test
     void givenValidCredentials_whenGetOneCategory_thenReturnCalledCategory() throws Exception {
 
-        CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
-        categoryRequest.setCategoryName("CATEGORY 1");
-        categoryRequest.setDescription("Description 1");
-
+        CreateCategoryRequest categoryRequest = createCategoryRequest();
         CreateCategoryResponse createdCategory = createCategory(categoryRequest);
 
         mockMvc.perform(get("/category/{id}", createdCategory.getId())
@@ -122,10 +120,7 @@ class CategoryControllerTest {
     @Test
     void givenInvalidId_whenGetOneCategory_thenReturnNotFound() throws Exception {
 
-        CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
-        categoryRequest.setCategoryName("CATEGORY 1");
-        categoryRequest.setDescription("Description 1");
-
+        CreateCategoryRequest categoryRequest = createCategoryRequest();
         CreateCategoryResponse createdCategory = createCategory(categoryRequest);
 
         mockMvc.perform(get("/category/{id}", createdCategory.getId() + 1)
@@ -139,10 +134,7 @@ class CategoryControllerTest {
     @Test
     void givenNormalUser_whenCreateCategory_thenReturnForbidden() throws Exception {
 
-        CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
-        categoryRequest.setCategoryName("CATEGORY 1");
-        categoryRequest.setDescription("Description 1");
-
+        CreateCategoryRequest categoryRequest = createCategoryRequest();
         String jsonCreateCategory = objectMapper.writeValueAsString(categoryRequest);
 
         mockMvc.perform(post("/category")
@@ -175,10 +167,7 @@ class CategoryControllerTest {
     @Test
     void givenAdminUser_whenCreateCategory_thenReturnCreated() throws Exception {
 
-        CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
-        categoryRequest.setCategoryName("CATEGORY 1");
-        categoryRequest.setDescription("Description 1");
-
+        CreateCategoryRequest categoryRequest = createCategoryRequest();
         String jsonCreateCategory = objectMapper.writeValueAsString(categoryRequest);
 
         mockMvc.perform(post("/category")
@@ -192,11 +181,8 @@ class CategoryControllerTest {
     @Test
     void givenUserAndValidParams_whenUpdateCategory_thenReturnForbidden() throws Exception {
 
-        CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
-        categoryRequest.setCategoryName("CATEGORY 1");
-        categoryRequest.setDescription("Description 1");
-
-        CreateCategoryResponse createdResponse = createCategory(categoryRequest);
+        CreateCategoryRequest createdRequest = createCategoryRequest();
+        CreateCategoryResponse createdResponse = createCategory(createdRequest);
 
         UpdateCategoryRequest updateCategoryRequest = new UpdateCategoryRequest();
         updateCategoryRequest.setCategoryName("CATEGORY 2");
@@ -214,11 +200,9 @@ class CategoryControllerTest {
     @Test
     void givenAdminAndInvalidParams_whenUpdateCategory_thenReturnBadRequest() throws Exception {
 
-        CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
-        categoryRequest.setCategoryName("CATEGORY 1");
-        categoryRequest.setDescription("Description 1");
 
-        CreateCategoryResponse createdResponse = createCategory(categoryRequest);
+        CreateCategoryRequest createdRequest = createCategoryRequest();
+        CreateCategoryResponse createdResponse = createCategory(createdRequest);
 
         UpdateCategoryRequest updateCategoryRequest = new UpdateCategoryRequest();
         updateCategoryRequest.setCategoryName("CATEGORY 2");
@@ -237,11 +221,8 @@ class CategoryControllerTest {
     @Test
     void givenAdminAndValidParams_whenUpdateCategory_thenReturnOK() throws Exception {
 
-        CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
-        categoryRequest.setCategoryName("CATEGORY 1");
-        categoryRequest.setDescription("Description 1");
-
-        CreateCategoryResponse createdResponse = createCategory(categoryRequest);
+        CreateCategoryRequest createdRequest = createCategoryRequest();
+        CreateCategoryResponse createdResponse = createCategory(createdRequest);
 
         UpdateCategoryRequest updateCategoryRequest = new UpdateCategoryRequest();
         updateCategoryRequest.setCategoryName("CATEGORY 2");
@@ -257,9 +238,19 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.message").value("Category updated successfully"));
     }
 
+    private CreateCategoryRequest createCategoryRequest() {
+        String name = UUID.randomUUID().toString().substring(0, 8);
 
-    private CreateCategoryResponse createCategory(CreateCategoryRequest request) throws Exception {
-        String categoryJson = objectMapper.writeValueAsString(request);
+        CreateCategoryRequest categoryRequest = new CreateCategoryRequest();
+        categoryRequest.setCategoryName("CATEGORY_" + name);
+        categoryRequest.setDescription("Description 1" + name);
+
+        return categoryRequest;
+    }
+
+
+    private CreateCategoryResponse createCategory(CreateCategoryRequest categoryRequest) throws Exception {
+        String categoryJson = objectMapper.writeValueAsString(categoryRequest);
 
         MvcResult createdResult = mockMvc.perform(post("/category")
                         .header("Authorization", "Bearer " + adminToken)
@@ -270,8 +261,6 @@ class CategoryControllerTest {
 
         JsonNode root = objectMapper.readTree(createdResult.getResponse().getContentAsString());
         return objectMapper.treeToValue(root.get("data"), CreateCategoryResponse.class);
-
-
     }
 
 }

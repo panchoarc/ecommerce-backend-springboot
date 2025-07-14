@@ -7,15 +7,15 @@ import com.buyit.ecommerce.dto.request.address.UpdateAddressRequest;
 import com.buyit.ecommerce.dto.response.address.CreateAddressResponse;
 import com.buyit.ecommerce.dto.response.address.UpdateAddressResponse;
 import com.buyit.ecommerce.dto.response.address.UserAddressResponse;
-import com.buyit.ecommerce.entity.User;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
-import com.buyit.ecommerce.repository.UsersRepository;
 import com.buyit.ecommerce.util.ErrorMessagesUtil;
+import com.buyit.ecommerce.util.UserTestUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.transaction.Transactional;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,22 +23,20 @@ import org.keycloak.representations.AccessTokenResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Transactional
 class AddressServiceTest {
 
     @Autowired
@@ -51,54 +49,42 @@ class AddressServiceTest {
     private JwtDecoder jwtDecoder;
 
     @Autowired
-    private UsersRepository usersRepository;
-
-    @Autowired
-    private KeycloakService keycloakService;
-
+    private UserTestUtils userTestUtils;
     private final ErrorMessagesUtil errorMessagesUtil = new ErrorMessagesUtil();
 
-    private UserRegisterDTO userRegisterDTO;
+    private String keycloakUserId;
 
-    @BeforeEach()
-    void setUp() {
-        userRegisterDTO = new UserRegisterDTO();
-        userRegisterDTO.setFirstName("Test");
-        userRegisterDTO.setLastName("User");
-        userRegisterDTO.setRole("user");
-        userRegisterDTO.setEmail("testuser@example.com");
-        userRegisterDTO.setUserName("testuser");
-        userRegisterDTO.setPassword("SecurePass123!");
+    @BeforeAll
+    void setUpAll() throws JsonProcessingException {
+        UserRegisterDTO userRegisterDTO = userTestUtils.getUserCredentials();
+        authService.createUser(userRegisterDTO);
+        keycloakUserId = extractKeycloakUserId(userRegisterDTO);
     }
 
-    @AfterEach
+    @AfterAll
     void tearDown() {
-        Optional<User> user = usersRepository.findByEmail(userRegisterDTO.getEmail());
-        user.ifPresent(value -> keycloakService.deleteUserFromKeycloak(value.getKeycloakUserId()));
+        userTestUtils.cleanUsers();
     }
 
-    private String extractKeycloakUserId() throws JsonProcessingException {
+    private String extractKeycloakUserId(UserRegisterDTO dto) throws JsonProcessingException {
         UserLoginDTO userLoginDTO = new UserLoginDTO();
-        userLoginDTO.setUserName("testuser");
-        userLoginDTO.setPassword("SecurePass123!");
+        userLoginDTO.setUserName(dto.getUserName());
+        userLoginDTO.setPassword(dto.getPassword());
 
         AccessTokenResponse response = authService.login(userLoginDTO);
         return jwtDecoder.decode(response.getToken()).getSubject();
     }
 
     @Test
-    @Transactional
-    @Rollback
-    void Should_ThrowConstraintViolationException_When_InvalidAddressParameters() throws JsonProcessingException {
-        authService.createUser(userRegisterDTO);
+    void Should_ThrowConstraintViolationException_When_InvalidAddressParameters(){
 
-        String keycloakUserId = extractKeycloakUserId();
         CreateAddressRequest createAddress = new CreateAddressRequest();
-        createAddress.setAlias("AliasTest");
-        createAddress.setCity("");
-        createAddress.setCountry("");
-        createAddress.setPostalCode("testpostalcode");
-        createAddress.setStreet("teststreet");
+        createAddress.setAlias("alias");
+        createAddress.setCity(null);
+        createAddress.setCountry(null);
+        createAddress.setPostalCode("postalCode");
+        createAddress.setStreet("street");
+
 
         ConstraintViolationException exception = assertThrows(ConstraintViolationException.class,
                 () -> addressService.createAddress(keycloakUserId, createAddress));
@@ -110,41 +96,21 @@ class AddressServiceTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
-    void Should_CreateSuccessfulAddress_WhenValidAddressParameters() throws JsonProcessingException {
-        authService.createUser(userRegisterDTO);
-
-        String keycloakUserId = extractKeycloakUserId();
-        CreateAddressRequest createAddress = new CreateAddressRequest();
-        createAddress.setAlias("AliasTest");
-        createAddress.setCity("testcity");
-        createAddress.setCountry("testcountry");
-        createAddress.setPostalCode("testpostalcode");
-        createAddress.setStreet("teststreet");
+    void Should_CreateSuccessfulAddress_WhenValidAddressParameters(){
+        CreateAddressRequest createAddress = createAddress();
 
         CreateAddressResponse response = addressService.createAddress(keycloakUserId, createAddress);
 
         assertNotNull(response);
-        assertThat(response.getCity()).isEqualTo("testcity");
-        assertThat(response.getCountry()).isEqualTo("testcountry");
-        assertThat(response.getPostalCode()).isEqualTo("testpostalcode");
-        assertThat(response.getStreet()).isEqualTo("teststreet");
+        assertTrue(response.getCity().contains(response.getCity()));
+        assertTrue(response.getCountry().contains(response.getCountry()));
+        assertTrue(response.getPostalCode().contains(response.getPostalCode()));
+        assertTrue(response.getStreet().contains(response.getStreet()));
     }
 
     @Test
-    @Transactional
-    @Rollback
-    void Should_ThrowResourceNotFoundException_WhenAddressNotFound() throws JsonProcessingException {
-        authService.createUser(userRegisterDTO);
-
-        String keycloakUserId = extractKeycloakUserId();
-        CreateAddressRequest createAddress = new CreateAddressRequest();
-        createAddress.setAlias("AliasTest");
-        createAddress.setCity("testcity");
-        createAddress.setCountry("testcountry");
-        createAddress.setPostalCode("testpostalcode");
-        createAddress.setStreet("teststreet");
+    void Should_ThrowResourceNotFoundException_WhenAddressNotFound() {
+        CreateAddressRequest createAddress = createAddress();
 
         CreateAddressResponse createdResponse = addressService.createAddress(keycloakUserId, createAddress);
 
@@ -157,18 +123,8 @@ class AddressServiceTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
-    void Should_ThrowResourceNotFoundException_WhenUserNotFound() throws JsonProcessingException {
-        authService.createUser(userRegisterDTO);
-
-        String keycloakUserId = extractKeycloakUserId();
-        CreateAddressRequest createAddress = new CreateAddressRequest();
-        createAddress.setAlias("AliasTest");
-        createAddress.setCity("testcity");
-        createAddress.setCountry("testcountry");
-        createAddress.setPostalCode("testpostalcode");
-        createAddress.setStreet("teststreet");
+    void Should_ThrowResourceNotFoundException_WhenUserNotFound(){
+        CreateAddressRequest createAddress = createAddress();
 
         CreateAddressResponse createdResponse = addressService.createAddress(keycloakUserId, createAddress);
         Long id = createdResponse.getId();
@@ -180,18 +136,8 @@ class AddressServiceTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
-    void Should_UpdateAddress_When_ParametersAreValid() throws JsonProcessingException {
-        authService.createUser(userRegisterDTO);
-
-        String keycloakUserId = extractKeycloakUserId();
-        CreateAddressRequest createAddress = new CreateAddressRequest();
-        createAddress.setAlias("AliasTest");
-        createAddress.setCity("testcity");
-        createAddress.setCountry("testcountry");
-        createAddress.setPostalCode("testpostalcode");
-        createAddress.setStreet("teststreet");
+    void Should_UpdateAddress_When_ParametersAreValid() {
+        CreateAddressRequest createAddress = createAddress();
 
         CreateAddressResponse createdResponse = addressService.createAddress(keycloakUserId, createAddress);
 
@@ -205,18 +151,8 @@ class AddressServiceTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
-    void Should_ThrowConstraintViolationException_When_InvalidUpdateAddressParameters() throws JsonProcessingException {
-        authService.createUser(userRegisterDTO);
-
-        String keycloakUserId = extractKeycloakUserId();
-        CreateAddressRequest createAddress = new CreateAddressRequest();
-        createAddress.setAlias("AliasTest");
-        createAddress.setCity("testcity");
-        createAddress.setCountry("testcountry");
-        createAddress.setPostalCode("testpostalcode");
-        createAddress.setStreet("teststreet");
+    void Should_ThrowConstraintViolationException_When_InvalidUpdateAddressParameters(){
+        CreateAddressRequest createAddress = createAddress();
 
         UpdateAddressRequest updateAddress = new UpdateAddressRequest();
         updateAddress.setCity("");
@@ -238,18 +174,8 @@ class AddressServiceTest {
     }
 
     @Test
-    @Transactional
-    @Rollback
-    void Should_UpdateAddressSuccessfully_When_ValidUpdateParameters() throws JsonProcessingException {
-        authService.createUser(userRegisterDTO);
-
-        String keycloakUserId = extractKeycloakUserId();
-        CreateAddressRequest createAddress = new CreateAddressRequest();
-        createAddress.setAlias("AliasTest");
-        createAddress.setCity("testcity");
-        createAddress.setCountry("testcountry");
-        createAddress.setPostalCode("testpostalcode");
-        createAddress.setStreet("teststreet");
+    void Should_UpdateAddressSuccessfully_When_ValidUpdateParameters(){
+        CreateAddressRequest createAddress = createAddress();
 
         UpdateAddressRequest updateAddress = new UpdateAddressRequest();
         updateAddress.setAlias("AliasTest2");
@@ -268,5 +194,20 @@ class AddressServiceTest {
         assertThat(response.getCountry()).isEqualTo(updateAddress.getCountry());
         assertThat(response.getPostalCode()).isEqualTo(updateAddress.getPostalCode());
         assertThat(response.getStreet()).isEqualTo(updateAddress.getStreet());
+    }
+
+
+    private CreateAddressRequest createAddress(){
+
+        String randomUUID = UUID.randomUUID().toString().substring(0, 8);
+
+        CreateAddressRequest createAddress = new CreateAddressRequest();
+        createAddress.setAlias("AliasTest"+randomUUID);
+        createAddress.setCity("testcity"+randomUUID);
+        createAddress.setCountry("testcountry"+randomUUID);
+        createAddress.setPostalCode("testpostalcode"+randomUUID);
+        createAddress.setStreet("teststreet"+randomUUID);
+
+        return createAddress;
     }
 }

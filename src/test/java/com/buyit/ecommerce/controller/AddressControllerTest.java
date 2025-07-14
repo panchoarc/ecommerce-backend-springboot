@@ -1,5 +1,6 @@
 package com.buyit.ecommerce.controller;
 
+import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.dto.request.address.CreateAddressRequest;
 import com.buyit.ecommerce.dto.request.address.UpdateAddressRequest;
 import com.buyit.ecommerce.dto.response.address.CreateAddressResponse;
@@ -7,7 +8,6 @@ import com.buyit.ecommerce.util.UserTestUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 @AutoConfigureMockMvc
 @Slf4j
-@Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AddressControllerTest {
 
@@ -49,8 +48,11 @@ class AddressControllerTest {
 
     @BeforeAll
     void setUp() throws JsonProcessingException {
-        adminToken = userTestUtils.getAdminUserToken();
-        userToken = userTestUtils.getUserToken();
+        UserRegisterDTO userRegisterDTO = userTestUtils.getUserCredentials();
+        UserRegisterDTO adminRegisterDTO = userTestUtils.getAdminCredentials();
+
+        adminToken = userTestUtils.getToken(adminRegisterDTO);
+        userToken = userTestUtils.getToken(userRegisterDTO);
     }
 
     @AfterAll

@@ -1,5 +1,6 @@
 package com.buyit.ecommerce.controller;
 
+import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.dto.request.category.CategoryRequest;
 import com.buyit.ecommerce.dto.request.product.CreateProductRequest;
 import com.buyit.ecommerce.dto.request.product.ProductRequest;
@@ -10,7 +11,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -44,7 +44,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @Slf4j
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Transactional
 class ProductControllerTest {
 
     @Autowired
@@ -61,8 +60,11 @@ class ProductControllerTest {
 
     @BeforeAll
     void setUp() throws JsonProcessingException {
-        adminToken = userTestUtils.getAdminUserToken();
-        userToken = userTestUtils.getUserToken();
+        UserRegisterDTO userRegisterDTO = userTestUtils.getUserCredentials();
+        UserRegisterDTO adminRegisterDTO = userTestUtils.getAdminCredentials();
+
+        adminToken = userTestUtils.getToken(adminRegisterDTO);
+        userToken = userTestUtils.getToken(userRegisterDTO);
     }
 
     @AfterAll
@@ -75,7 +77,7 @@ class ProductControllerTest {
 
         mockMvc.perform(post("/products/search")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk());
     }
 
     @Test

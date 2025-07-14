@@ -17,8 +17,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -44,34 +42,24 @@ class AuthControllerTest {
     private AuthService authService;
 
     @Autowired
-    private UserTestUtils userTestUtils;
-
-    @Autowired
-    private WebApplicationContext context;
-    @Autowired
     private KeycloakService keycloakService;
 
     private static UserRegisterDTO userRegisterDTO;
 
+    @Autowired
+    private UserTestUtils userTestUtils;
 
     @BeforeAll
     void setUp() {
-        userRegisterDTO = new UserRegisterDTO();
-        userRegisterDTO.setFirstName("Test");
-        userRegisterDTO.setLastName("User");
-        userRegisterDTO.setEmail("testuser@example.com");
-        userRegisterDTO.setUserName("testuser");
-        userRegisterDTO.setPassword("SecurePass123!");
+        userTestUtils.cleanUsers();
     }
 
     @BeforeEach
-    void setUpInterceptors() {
-        mockMvc = MockMvcBuilders
-                .webAppContextSetup(context)
-                .build();
+    void setUpEach() {
+        userRegisterDTO = userTestUtils.getUserCredentials();
     }
 
-    @AfterEach
+    @AfterAll
     void tearDown() {
         userTestUtils.cleanUsers();
     }
@@ -124,7 +112,7 @@ class AuthControllerTest {
     void Should_LoginSuccessful_When_CredentialsAreValid() throws Exception {
         authService.createUser(userRegisterDTO);
 
-        UserLoginDTO userLoginDTO = new UserLoginDTO("testuser", "SecurePass123!");
+        UserLoginDTO userLoginDTO = new UserLoginDTO(userRegisterDTO.getUserName(), userRegisterDTO.getPassword());
         String jsonRequest = objectMapper.writeValueAsString(userLoginDTO);
 
         mockMvc.perform(post("/auth/login")
