@@ -25,7 +25,8 @@ public class UserTestUtils {
 
     private final TokenExtractor tokenExtractor;
 
-    public String getAdminUserToken() throws JsonProcessingException {
+
+    public UserRegisterDTO getAdminCredentials() {
         UserRegisterDTO userRegisterDTO = new UserRegisterDTO();
         userRegisterDTO.setFirstName("AdminFirstname");
         userRegisterDTO.setLastName("AdminLastname");
@@ -33,39 +34,32 @@ public class UserTestUtils {
         userRegisterDTO.setEmail("admintest" + System.currentTimeMillis() + "@example.com");
         userRegisterDTO.setUserName("admintest" + System.currentTimeMillis());
         userRegisterDTO.setPassword("SecurePass123!");
-
-        authService.createUser(userRegisterDTO);
-
-        return tokenExtractor.extractTokenFromUser(userRegisterDTO.getUserName(), userRegisterDTO.getPassword());
+        return userRegisterDTO;
     }
 
-
-    public String getUserToken() throws JsonProcessingException {
+    public UserRegisterDTO getUserCredentials() {
         UserRegisterDTO userRegisterDTO = new UserRegisterDTO();
         userRegisterDTO.setFirstName("UserFirstname");
         userRegisterDTO.setLastName("UserLastname");
         userRegisterDTO.setEmail("usertest" + System.currentTimeMillis() + "@example.com");
         userRegisterDTO.setUserName("usertest" + System.currentTimeMillis());
         userRegisterDTO.setPassword("SecurePass123!");
+        return userRegisterDTO;
+    }
 
-        authService.createUser(userRegisterDTO);
-
-        return tokenExtractor.extractTokenFromUser(userRegisterDTO.getUserName(), userRegisterDTO.getPassword());
+    public String getToken(UserRegisterDTO userRegister) throws JsonProcessingException {
+        authService.createUser(userRegister);
+        return tokenExtractor.extractTokenFromUser(userRegister.getUserName(), userRegister.getPassword());
     }
 
 
     public void cleanUsers() {
         List<User> users = usersRepository.findAll();
-
         log.info("USERS IN CATEGORY: {}", users.size());
-        if (!users.isEmpty()) {
-            for (User user : users) {
-                keycloakService.deleteUserFromKeycloak(user.getKeycloakUserId());
-            }
+        for (User user : users) {
+            log.info("USER KEYCLOAK ID: {} ", user.getKeycloakUserId());
+            log.info("USER NAME: {} ", user.getUserName());
+            keycloakService.deleteUserFromKeycloak(user.getUserName());
         }
-        usersRepository.deleteAll();
-
     }
-
-
 }
