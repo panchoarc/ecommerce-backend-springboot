@@ -148,11 +148,16 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     @Override
-    public void deleteUserFromKeycloak(String userId) {
-        UsersResource usersResource = getUsersResource();
+    public void deleteUserFromKeycloak(String username) {
 
+        String userId = "";
+        UsersResource usersResource = getUsersResource();
+        List<UserRepresentation> users = usersResource.search(username, true);
         try {
-            usersResource.get(userId).remove();
+            if (!users.isEmpty()) {
+                userId = users.get(0).getId();
+                usersResource.delete(userId);
+            }
         } catch (Exception e) {
             String errorMessage = String.format("Error al eliminar usuario en Keycloak. ID: %s, Error: %s",
                     userId, e.getMessage());
