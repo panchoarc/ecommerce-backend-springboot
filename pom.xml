@@ -5,8 +5,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.5</version> <!-- Usando propiedad para la versión -->
-        <relativePath/> <!-- lookup parent from repository -->
+        <version>4.0.6</version>
+        <relativePath/>
     </parent>
     <groupId>com.buyit</groupId>
     <artifactId>ecommerce</artifactId>
@@ -21,33 +21,47 @@
         <developer/>
     </developers>
 
-    <!-- Definición de propiedades centralizadas -->
     <properties>
         <java.version>17</java.version>
-        <spring.version>3.4.5</spring.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <postgresql.version>42.7.2</postgresql.version>
-        <lombok.version>1.18.24</lombok.version> <!-- Se añadió la versión de Lombok -->
-        <keycloak.version>26.0.2</keycloak.version>
-        <springdoc.version>2.7.0</springdoc.version>
-        <liquibase.version>4.29.0</liquibase.version> <!-- Versión de Liquibase -->
-        <testcontainers.version>1.20.4</testcontainers.version>
+        <mapstruct.version>1.7.0.Beta1</mapstruct.version>
+        <postgresql.version>42.7.11</postgresql.version>
+        <lombok.version>1.18.46</lombok.version>
+        <keycloak.version>26.0.9</keycloak.version>
+        <springdoc.version>3.0.3</springdoc.version>
+        <liquibase.version>5.0.3</liquibase.version>
+        <testcontainers.version>2.0.5</testcontainers.version>
         <lombok.mapstruct.binding>0.2.0</lombok.mapstruct.binding>
         <testcontainers.keycloak.version>3.6.0</testcontainers.keycloak.version>
-        <amazon.s3.version>2.25.27</amazon.s3.version>
-        <stripe.version>29.0.0</stripe.version>
-        <zxing.version>3.5.3</zxing.version>
+        <amazon.s3.version>2.45.1</amazon.s3.version>
+        <stripe.version>32.1.0</stripe.version>
+        <zxing.version>3.5.4</zxing.version>
+        <redisson.starter.version>3.24.3</redisson.starter.version>
 
-        <itext.pdfhtml.version>6.1.0</itext.pdfhtml.version>
-        <itext.version>9.1.0</itext.version>
+        <maven.versions.plugin.version>2.21.0</maven.versions.plugin.version>
+        <itext.pdfhtml.version>6.3.2</itext.pdfhtml.version>
+        <itext.version>9.6.0</itext.version>
     </properties>
 
     <dependencies>
-    <!-- Dependencia de Lombok y MapStruct -->
+
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
         <dependency>
@@ -169,10 +183,15 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
+
+
+
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
@@ -195,13 +214,37 @@
 
     <build>
         <plugins>
-            <!-- Plugin para compilar Java con las propiedades de versión -->
+            <plugin>
+                <groupId>org.liquibase</groupId>
+                <artifactId>liquibase-maven-plugin</artifactId>
+                <version>${liquibase.version}</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${maven.versions.plugin.version}</version>
+                <configuration>
+                    <allowSnapshots>false</allowSnapshots>
+
+                    <!-- ignore pre-releases -->
+                    <ignoredVersions>
+                        .*-(M|alpha|beta|Beta|RC).*
+                    </ignoredVersions>
+
+                    <!-- optional: include/exclude what gets checked -->
+                    <processDependencyManagement>true</processDependencyManagement>
+                    <processParent>true</processParent>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
+
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -221,6 +264,9 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <layers>
+                        <enabled>true</enabled>
+                    </layers>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -228,6 +274,26 @@
                         </exclude>
                     </excludes>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
