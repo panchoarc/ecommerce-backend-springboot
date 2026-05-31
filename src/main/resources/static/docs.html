@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>BuyIT API Docs</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+    <style>
+        :root {
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: var(--header-bg, #ffffff);
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--heading-color, #0d1a26);
+        }
+
+        #redoc-container {
+            padding: 0;
+        }
+
+        .dark-mode {
+            --background-color: #353f52;
+            --text-color: #ffffff;
+            --header-bg: #1e1e1e;
+            --heading-color: #61dafb;
+        }
+
+        .light-mode {
+            --background-color: #e0e0e0;
+            --text-color: #212529;
+            --header-bg: #ffffff;
+            --heading-color: #0d1a26;
+        }
+
+
+
+        #mode-toggle {
+            padding: 0.4rem 0.75rem;
+            font-size: 0.9rem;
+            background-color: transparent;
+            border: 1px solid #ccc;
+            border-radius: 0;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 1.2s ease;
+        }
+
+        #mode-toggle:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>📘 BuyIT API Documentation</h1>
+    <button id="mode-toggle">Cambiar modo</button>
+</header>
+
+<div id="redoc-container"></div>
+
+<script>
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const savedMode = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+    const bodyClass = savedMode === 'dark' ? 'dark-mode' : 'light-mode';
+    document.body.classList.add(bodyClass);
+
+    const themeDark = {
+        colors: {
+            primary: { main: '#1951c2' },
+            background: { default: '#233a69' },
+            text: { primary: '#ffffff', secondary: '#9e9e9e' },
+            http: {
+                get: '#00e676',
+                post: '#2196f3',
+                put: '#ffb300',
+                delete: '#ef5350'
+            }
+        },
+        typography: {
+            fontFamily: 'Inter, Segoe UI, sans-serif',
+            code: {
+                color: '#f48fb1',
+                backgroundColor: '#1e1e1e',
+                fontSize: '14px'
+            }
+        },
+        sidebar: {
+            backgroundColor: '#1e1e1e',
+            textColor: '#eeeeee'
+        },
+        rightPanel: {
+            backgroundColor: '#1a1a1a'
+        }
+    };
+
+    const themeLight = {
+        colors: {
+            text: { primary: '#808b97', secondary: '#6c757d' },
+            http: {
+                get: '#198754',
+                post: '#0d6efd',
+                put: '#ffc107',
+                delete: '#dc3545'
+            }
+        },
+        sidebar: {
+            backgroundColor: '#f0f0f0'
+        },
+        rightPanel: {
+            //backgroundColor: '#f9f9fb'
+        },
+        typography: {
+            fontFamily: 'Inter, Segoe UI, sans-serif'
+        }
+    };
+
+    const container = document.getElementById('redoc-container');
+
+    function renderRedoc(theme) {
+        container.innerHTML = '';
+        Redoc.init('/api/v3/api-docs', {
+            scrollYOffset: 80,
+            hideDownloadButton: true,
+            //expandResponses: '200,400',
+            //pathInMiddlePanel: true,
+            theme
+        }, container);
+    }
+
+    renderRedoc(savedMode === 'dark' ? themeDark : themeLight);
+
+    document.getElementById('mode-toggle').addEventListener('click', () => {
+        const current = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.body.classList.remove(current + '-mode');
+        document.body.classList.add(next + '-mode');
+        localStorage.setItem('theme', next);
+        renderRedoc(next === 'dark' ? themeDark : themeLight);
+    });
+</script>
+</body>
+</html>
