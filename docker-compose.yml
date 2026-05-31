@@ -1,55 +1,91 @@
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     container_name: shared-postgres
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - postgres_backups:/backup/
+    env_file:
+      - .env
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - shared-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 512m
 
   keycloak:
-    image: quay.io/keycloak/keycloak:26.0
+    image: quay.io/keycloak/keycloak:26.6
     container_name: keycloak
+    env_file:
+      - .env
     environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-    command: start-dev
+    command:
+      - start-dev
+      - --import-realm
+
+    volumes:
+      - ./src/main/resources/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    depends_on:
+      - postgres
     ports:
       - "9080:8080"
     networks:
       - shared-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 768m
 
-  localstack:
-    image: localstack/localstack:4
-    container_name: localstack
-    environment:
-      - SERVICES=s3,sqs,dynamodb
-      - AWS_ACCESS_KEY_ID=test
-      - AWS_SECRET_ACCESS_KEY=test
-      - PERSISTENCE=1
+  ministack:
+    image: ministackorg/ministack:1.3
     ports:
-      - "4566:4566"            # LocalStack Gateway
-      - "4510-4559:4510-4559"  # external services port range
+      - "4566:4566"
+    environment:
+      - PERSIST_STATE=1
+      - S3_PERSIST=1
+      - S3_DATA_DIR=/var/lib/ministack/s3
     volumes:
-      - "/var/run/docker.sock:/var/run/docker.sock"
-      - "localstack_data:/var/lib/localstack"
-      - "./localstack/scripts/config-aws.sh:/etc/localstack/init/ready.d/config-aws.sh:ro"
-      - "./localstack/scripts/create-bucket.sh:/etc/localstack/init/ready.d/create-bucket.sh:ro"
-      - "./localstack/scripts/cors.json:/etc/localstack/init/ready.d/cors.json:ro"
+      - ministack_data:/var/lib/ministack
+      - "./localstack/scripts:/etc/localstack/init/ready.d"
+    networks:
+      - shared-network
     restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    container_name: buyit-redis
+    command: ["redis-server"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - shared-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
 networks:
   shared-network:
 
 volumes:
   postgres_data:
-  postgres_backups:
-  localstack_data:
+  ministack_data:
+  sonarqube_data:
+  redis_data:
