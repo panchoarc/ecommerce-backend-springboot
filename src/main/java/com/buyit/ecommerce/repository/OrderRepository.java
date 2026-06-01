@@ -19,7 +19,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
 
     @Query(value = """
-            SELECT 
+            SELECT
             u.first_name || ' ' || u.last_name AS fullName,
             u.email AS email,
             a.street AS street,

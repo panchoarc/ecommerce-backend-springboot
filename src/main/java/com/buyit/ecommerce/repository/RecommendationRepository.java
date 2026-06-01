@@ -16,16 +16,16 @@ public interface RecommendationRepository extends JpaRepository<Product,Long> {
 
 
     @Query("""
-    SELECT 
+    SELECT
         p.productId AS id,
         p.name AS name,
         p.description AS description,
         p.price AS price,
         p.stockQuantity AS stock,
         (
-            SELECT pi.url 
-            FROM ProductImage pi 
-            WHERE pi.product.productId = p.productId 
+            SELECT pi.url
+            FROM ProductImage pi
+            WHERE pi.product.productId = p.productId
             AND pi.isMain = true
         ) AS img,
         COALESCE(AVG(r.rating), 0) AS rating

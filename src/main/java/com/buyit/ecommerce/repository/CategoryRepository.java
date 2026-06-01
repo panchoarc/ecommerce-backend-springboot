@@ -13,11 +13,6 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long>, JpaSpecificationExecutor<Category> {
 
-
-    @Query("SELECT c FROM Category c WHERE c.isActive = true")
-    List<Category> findActiveCategories();
-
-
     @Query("SELECT new com.buyit.ecommerce.dto.response.category.CategoryMenuResponse(c.categoryId, c.name) " +
             "FROM Category c WHERE c.isActive = true")
     List<CategoryMenuResponse> findActiveCategoryMenu();
