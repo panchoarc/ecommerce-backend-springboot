@@ -1,7 +1,6 @@
 package com.buyit.ecommerce.config;
 
-import com.buyit.ecommerce.security.CustomAccessDeniedHandler;
-import com.buyit.ecommerce.security.CustomAuthenticationEntryPoint;
+import com.buyit.ecommerce.security.PublicEndpointMatcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -10,12 +9,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-
-import static com.buyit.ecommerce.constants.SecurityConstants.SWAGGER_URLS;
-
 
 @Configuration
 @EnableWebSecurity
@@ -23,35 +17,23 @@ import static com.buyit.ecommerce.constants.SecurityConstants.SWAGGER_URLS;
 @Slf4j
 public class SecurityConfig {
 
-    private final JwtAuthenticationConverter jwtAuthenticationConverter;
 
-    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-
-    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final PublicEndpointMatcher publicEndpointMatcher;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
 
-        return httpSecurity
-                .authorizeHttpRequests(http -> http
-                        .requestMatchers(SWAGGER_URLS.toArray(new String[0]))
-                        .permitAll()
-                        .requestMatchers("/actuator/**")
-                        .permitAll()
-                        .anyRequest()
-                        .permitAll())
-                .oauth2ResourceServer(oauth -> oauth
-                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
-                .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(customAuthenticationEntryPoint)
-                        .accessDeniedHandler(customAccessDeniedHandler))
+        http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
-                .build();
-    }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/public/**", "/oauth2/**", "/login/**", "/auth/**").permitAll()
+                        .requestMatchers(publicEndpointMatcher).permitAll()
+                        .anyRequest().authenticated()
+                )
+
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
+
+        return http.build();
     }
 }

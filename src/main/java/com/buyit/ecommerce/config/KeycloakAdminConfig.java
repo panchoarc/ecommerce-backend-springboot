@@ -1,7 +1,7 @@
 package com.buyit.ecommerce.config;
 
 
-import lombok.Getter;
+import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -9,17 +9,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class KeycloakConfig {
+public class KeycloakAdminConfig {
 
     @Value("${keycloak.server-url}")
     private String serverUrl;
 
-    @Getter
     @Value("${keycloak.realm.name}")
     private String realmName;
 
-    @Value("${keycloak.client-id}")
-    private String clientId;
+    @Value("${keycloak.admin.client-id}")
+    private String adminClientId;
 
     @Value("${keycloak.admin.secret}")
     private String clientSecret;
@@ -29,9 +28,9 @@ public class KeycloakConfig {
         return KeycloakBuilder.builder()
                 .serverUrl(serverUrl)
                 .realm(realmName)
-                .clientId(clientId)
+                .clientId(adminClientId)
                 .clientSecret(clientSecret)  // Usando client credentials
-                .grantType("client_credentials")
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                 .build();
     }
 }
