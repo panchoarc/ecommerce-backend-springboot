@@ -11,6 +11,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.buyit.ecommerce.constants.SecurityConstants.ACTUATOR_URLS;
+import static com.buyit.ecommerce.constants.SecurityConstants.SWAGGER_URLS;
+
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -28,6 +31,8 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/public/**", "/oauth2/**", "/login/**", "/auth/**").permitAll()
+                        .requestMatchers(SWAGGER_URLS.toArray(new String[0])).permitAll()
+                        .requestMatchers(ACTUATOR_URLS.toArray(new String[0])).permitAll()
                         .requestMatchers(publicEndpointMatcher).permitAll()
                         .anyRequest().authenticated()
                 )
