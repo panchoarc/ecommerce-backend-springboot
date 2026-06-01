@@ -1,0 +1,2 @@
+CREATE DATABASE keycloak;
+CREATE DATABASE ecommerce_db;
