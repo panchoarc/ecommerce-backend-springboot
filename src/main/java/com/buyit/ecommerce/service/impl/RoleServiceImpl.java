@@ -1,26 +1,26 @@
 package com.buyit.ecommerce.service.impl;
 
-import com.buyit.ecommerce.dto.request.endpoint.CreateEndpointRequest;
-import com.buyit.ecommerce.entity.Endpoint;
+import com.buyit.ecommerce.entity.Permission;
 import com.buyit.ecommerce.entity.Role;
-import com.buyit.ecommerce.entity.RoleEndpoint;
+import com.buyit.ecommerce.entity.RolePermission;
 import com.buyit.ecommerce.exception.custom.ResourceExistException;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
-import com.buyit.ecommerce.repository.EndpointRepository;
-import com.buyit.ecommerce.repository.RoleEndpointRepository;
+import com.buyit.ecommerce.repository.PermissionRepository;
+import com.buyit.ecommerce.repository.RolePermissionRepository;
 import com.buyit.ecommerce.repository.RoleRepository;
 import com.buyit.ecommerce.service.KeycloakService;
 import com.buyit.ecommerce.service.RoleService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.idm.RoleRepresentation;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,8 +29,8 @@ public class RoleServiceImpl implements RoleService {
 
     private final KeycloakService keycloakService;
     private final RoleRepository roleRepository;
-    private final EndpointRepository endpointRepository;
-    private final RoleEndpointRepository roleEndpointRepository;
+    private final PermissionRepository permissionRepository;
+    private final RolePermissionRepository rolePermissionRepository;
 
     @Override
     public void syncKeycloakRoles() {
@@ -46,20 +46,6 @@ public class RoleServiceImpl implements RoleService {
 
     }
 
-
-    @Override
-    public void assignRolesToEndpoint(Long id, CreateEndpointRequest endpointsIds) {
-        Role role = findRoleById(id);
-        List<Endpoint> endpoints = endpointRepository.findAllById(endpointsIds.getEndpointIds());
-
-        boolean isValidEndpoints = isEndpointsValid(endpointsIds.getEndpointIds());
-
-        if (!isValidEndpoints) {
-            throw new ResourceNotFoundException("Some endpoints IDs are not valid");
-        }
-        updateRoleEndpoints(endpoints, role);
-    }
-
     @Override
     public Role findByName(String name) {
         Optional<Role> role = roleRepository.findByName(name);
@@ -69,35 +55,65 @@ public class RoleServiceImpl implements RoleService {
         return role.get();
     }
 
+    @Override
+    @Transactional
+    public void assignPermissionsToRole(Long roleId, List<Long> permissionsId) {
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
 
-    public void updateRoleEndpoints(List<Endpoint> endpoints, Role role) {
+        Set<RolePermission> currentRelations = role.getRolePermissions();
 
-        // Obtener los endpoints existentes para el rol
-        List<RoleEndpoint> existingRoleEndpoints = roleEndpointRepository.findByRole(role);
 
-        // Crear un conjunto con los IDs de los endpoints existentes para búsquedas más rápidas
-        Set<Long> existingEndpointIds = existingRoleEndpoints.stream()
-                .map(roleEndpoint -> roleEndpoint.getEndpoint().getId())
-                .filter(Objects::nonNull) // Asegurarnos de que no haya null
-                .collect(Collectors.toSet());
+        Set<Long> currentIds = rolePermissionRepository.findPermissionIdsByRoleId(roleId);
 
-        // Filtrar los nuevos endpoints que no están asociados al rol
-        List<RoleEndpoint> newRoleEndpoints = endpoints.stream()
-                .filter(endpoint -> !existingEndpointIds.contains(endpoint.getId()))
-                .map(endpoint -> {
-                    // Crear la nueva relación RoleEndpoint
-                    RoleEndpoint roleEndpoint = new RoleEndpoint();
-                    roleEndpoint.setRole(role);
-                    roleEndpoint.setEndpoint(endpoint);
-                    roleEndpoint.setActive(true);
-                    return roleEndpoint;
-                })
-                .toList();
+        Set<Long> newIds = new HashSet<>(permissionsId);
 
-        // Guardar todas las nuevas relaciones en una sola operación
-        if (!newRoleEndpoints.isEmpty()) {
-            roleEndpointRepository.saveAll(newRoleEndpoints);
+        // 🧹 1. ELIMINAR solo los que sobran
+        currentRelations.removeIf(rp -> !newIds.contains(rp.getPermission().getId()));
+
+        // ➕ 2. CALCULAR solo los que faltan (evita query innecesaria)
+        Set<Long> idsToAdd = new HashSet<>(newIds);
+        idsToAdd.removeAll(currentIds);
+
+        if (!idsToAdd.isEmpty()) {
+
+            List<Permission> permissionsToAdd = permissionRepository.findAllById(idsToAdd);
+
+            for (Permission permission : permissionsToAdd) {
+                RolePermission rp = new RolePermission();
+                rp.setRole(role);
+                rp.setPermission(permission);
+                rp.setGrantedAt(LocalDateTime.now());
+                rp.setGrantedBy("system");
+                rp.setIsActive(true);
+
+                currentRelations.add(rp);
+            }
         }
+    }
+
+    @Override
+    @Transactional
+    public void assignAdminPermissions() {
+
+        Role adminRole = roleRepository.findByName("ADMIN")
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found"));
+
+        List<Permission> missingPermissions =
+                permissionRepository.findMissingPermissions(adminRole.getId());
+
+        LocalDateTime now = LocalDateTime.now();
+
+        missingPermissions.forEach(permission -> {
+            RolePermission rp = new RolePermission();
+            rp.setRole(adminRole);
+            rp.setPermission(permission);
+            rp.setGrantedAt(now);
+            rp.setGrantedBy("system");
+            rp.setIsActive(true);
+
+            adminRole.getRolePermissions().add(rp);
+        });
     }
 
     private void syncRoleWithDatabase(String roleId, String roleName) {
@@ -118,25 +134,5 @@ public class RoleServiceImpl implements RoleService {
                 roleRepository.save(existingRole);
             }
         }
-    }
-
-
-    private Role findRoleById(Long id) {
-        return roleRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Role not found"));
-    }
-
-    public boolean isEndpointsValid(List<Long> endpointsIds) {
-        if (endpointsIds == null || endpointsIds.isEmpty()) {
-            return false;  // Si la lista está vacía o es nula, devuelve false
-        }
-
-        log.info("Checking endpoints validity for {}", endpointsIds.size());
-
-        // Obtener todas las categorías correspondientes a los categoryIds de una sola vez
-        List<Endpoint> endpoints = endpointRepository.findAllById(endpointsIds);
-
-        // Verificar si todas las categorías existen y están activas
-        return endpointsIds.size() == endpoints.size() &&
-                endpoints.stream().allMatch(Endpoint::getIsActive);
     }
 }

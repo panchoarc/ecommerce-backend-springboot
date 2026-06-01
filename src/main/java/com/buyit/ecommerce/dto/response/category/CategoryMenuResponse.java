@@ -11,7 +11,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CategoryMenuResponse {
-
     private Long id;
     private String name;
 }

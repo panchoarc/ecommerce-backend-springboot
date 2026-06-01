@@ -4,6 +4,7 @@ import com.buyit.ecommerce.dto.request.UserRegisterDTO;
 import com.buyit.ecommerce.exception.custom.KeycloakIntegrationException;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
 import com.buyit.ecommerce.service.KeycloakService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.core.Response;
 import lombok.Getter;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +35,7 @@ public class KeycloakServiceImpl implements KeycloakService {
     @Value("${keycloak.realm.name}")
     private String realmName;
 
-    @Value("${keycloak.client-id}")
+    @Value("${keycloak.backend.client-id}")
     private String clientId;
 
     @Getter
@@ -45,28 +47,38 @@ public class KeycloakServiceImpl implements KeycloakService {
 
 
     @Override
+    public void getUserSessions(String userId) {
+        List<UserSessionRepresentation> userSessions = getUsersResource()
+                .get(userId)
+                .getUserSessions();
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        userSessions.forEach(session -> {
+            try {
+                log.info(
+                        "{}",
+                        mapper.writerWithDefaultPrettyPrinter()
+                                .writeValueAsString(session)
+                );
+            } catch (Exception e) {
+                log.error("Error serializando sesión", e);
+            }
+        });
+
+    }
+
+    @Override
     public List<RoleRepresentation> getClientRoles() {
-        ClientRepresentation client = getClientRepresentation();
-        return getRealmResource().clients().get(client.getId()).roles().list();
 
-    }
+        ClientRepresentation backendClient =
+                getClientRepresentation();
 
-    @Override
-    public String getClientInternalId() {
-        ClientRepresentation client = getClientRepresentation();
-        return client.getId();
-    }
-
-    @Override
-    public String getClientId() {
-        ClientRepresentation client = getClientRepresentation();
-        return client.getClientId();
-    }
-
-    @Override
-    public String getClientSecret() {
-        ClientRepresentation client = getClientRepresentation();
-        return client.getSecret();
+        return getRealmResource()
+                .clients()
+                .get(backendClient.getId())
+                .roles()
+                .list();
     }
 
     @Override
@@ -83,18 +95,20 @@ public class KeycloakServiceImpl implements KeycloakService {
     }
 
     private String extractUserIdFromResponse(Response response) {
-        return response.getLocation().getPath().replaceAll(".*/([^/]+)$", "$1");
+        String path = response.getLocation().getPath();
+        int lastSlash = path.lastIndexOf('/');
+        return (lastSlash != -1) ? path.substring(lastSlash + 1) : path;
     }
 
     @Override
     public void assignDefaultRoleToUser(String keycloakUserId, String userRole) {
 
-
-        String clientInternalId = getClientInternalId();
         RoleRepresentation roleToAssign = getRoleFromKeycloak(userRole);
-
         UserResource userResource = getUsersResource().get(keycloakUserId);
-        userResource.roles().clientLevel(clientInternalId).add(List.of(roleToAssign));
+        userResource
+                .roles()
+                .clientLevel(getClientRepresentation().getId())
+                .add(List.of(roleToAssign));
     }
 
     @Async("taskExecutor")
@@ -110,41 +124,41 @@ public class KeycloakServiceImpl implements KeycloakService {
         }
     }
 
+
+
     @Override
-    public String getServerUrl() {
-        return getAuthServerUrl();
+    public boolean hasOTP(String userId) {
+        List<CredentialRepresentation> credentials = getRealmResource()
+                .users()
+                .get(userId)
+                .credentials();
+
+        return credentials.stream().anyMatch(c -> "otp".equals(c.getType()));
     }
 
     @Override
-    public String getAuthUrl() {
-        return getAuthServerUrl() + "/realms/" + getRealmName() + "/protocol/openid-connect/auth";
-    }
+    public void startOTPSetup(String userId) {
+        UserResource userResource = getUsersResource().get(userId);
+        UserRepresentation userRep = userResource.toRepresentation();
 
-    @Override
-    public boolean isProviderEnabled(String providerAlias) {
+        List<String> actions =
+                Optional.ofNullable(userRep.getRequiredActions())
+                        .orElse(new ArrayList<>());
 
-        List<IdentityProviderRepresentation> providers = getRealmResource().identityProviders().findAll();
-        for (IdentityProviderRepresentation provider : providers) {
-            if (provider.getAlias().equals(providerAlias)) {
-                return provider.isEnabled();
-            }
+        if (!actions.contains("CONFIGURE_TOTP")) {
+            actions.add("CONFIGURE_TOTP");
         }
-        return false;
+
+        userRep.setRequiredActions(actions);
+        userResource.update(userRep);
     }
 
     @Override
-    public String getRedirectProvider(String provider, String redirectUrl) {
-        return getAuthUrl() +
-                "?kc_idp_hint=" + provider +
-                "&client_id=" + getClientId() +
-                "&response_type=code" +
-                "&redirect_uri=" + redirectUrl;
-    }
-
-
-    @Override
-    public String getServerToken() {
-        return getAuthServerUrl() + "/realms/" + getRealmName() + "/protocol/openid-connect/token";
+    public void disableOTP(String userId) {
+        UserResource user = getUsersResource().get(userId);
+        List<CredentialRepresentation> credentials = user.credentials();
+        credentials.stream().filter(c -> "otp".equals(c.getType()))
+                .forEach(c -> user.removeCredential(c.getId()));
     }
 
     @Override
@@ -168,10 +182,16 @@ public class KeycloakServiceImpl implements KeycloakService {
 
 
     private RoleRepresentation getRoleFromKeycloak(String roleName) {
-        return getClientRoles().stream()
-                .filter(role -> role.getName().equals(roleName))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Role '" + roleName + "' not found"));
+
+        ClientRepresentation backendClient =
+                getClientRepresentation();
+
+        return getRealmResource()
+                .clients()
+                .get(backendClient.getId())
+                .roles()
+                .get(roleName)
+                .toRepresentation();
     }
 
     private UserRepresentation buildKeycloakUserRepresentation(UserRegisterDTO userRegisterDTO) {
@@ -200,17 +220,20 @@ public class KeycloakServiceImpl implements KeycloakService {
         return getRealmResource().users();
     }
 
+
     public ClientRepresentation getClientRepresentation() {
 
-        Optional<ClientRepresentation> client = getRealmResource()
-                .clients()
-                .findByClientId(clientId)
-                .stream()
-                .findFirst();
+        Optional<ClientRepresentation> client =
+                getRealmResource()
+                        .clients()
+                        .findByClientId(clientId)
+                        .stream()
+                        .findFirst();
 
-        if (client.isEmpty()) {
-            throw new ResourceNotFoundException("Client with clientId '" + clientId + "' not found");
-        }
-        return client.get();
+        return client.orElseThrow(
+                () -> new ResourceNotFoundException(
+                        "Client not found: " + clientId
+                )
+        );
     }
 }

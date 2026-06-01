@@ -1,11 +1,12 @@
 package com.buyit.ecommerce.service;
 
 import com.google.zxing.WriterException;
+import jakarta.mail.MessagingException;
 
 import java.io.IOException;
 
 public interface VoucherService {
 
 
-    byte[] generateVoucher(String keycloakUserId,String orderNumber) throws IOException, WriterException;
+    byte[] generateVoucher(String keycloakUserId,String orderNumber) throws IOException, WriterException, MessagingException;
 }

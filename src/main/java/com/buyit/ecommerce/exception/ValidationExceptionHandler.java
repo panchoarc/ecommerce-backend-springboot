@@ -1,6 +1,6 @@
 package com.buyit.ecommerce.exception;
 
-import com.buyit.ecommerce.util.ApiResponse;
+import com.buyit.ecommerce.util.ResponseAPI;
 import com.buyit.ecommerce.util.ResponseBuilder;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class ValidationExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse<Void> handleValidationException(MethodArgumentNotValidException ex) {
+    public ResponseAPI<Void> handleValidationException(MethodArgumentNotValidException ex) {
         Map<String, String> validationErrors = new HashMap<>();
 
         // Obtener la clase del objeto que causó la excepción
@@ -51,7 +51,7 @@ public class ValidationExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse<Void> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
+    public ResponseAPI<Void> handleTypeMismatchException(MethodArgumentTypeMismatchException ex) {
         String paramName = ex.getName();
         String paramType = (ex.getRequiredType() != null) ? ex.getRequiredType().getSimpleName() : "Unknown";
         String invalidValue = (ex.getValue() != null) ? ex.getValue().toString() : "null";
@@ -69,7 +69,7 @@ public class ValidationExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse<Void> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+    public ResponseAPI<Void> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
 
         Map<String, String> errors = new HashMap<>();
         errors.put("message", ex.getMessage());

@@ -1,7 +1,7 @@
 package com.buyit.ecommerce.exception;
 
 import com.buyit.ecommerce.exception.custom.*;
-import com.buyit.ecommerce.util.ApiResponse;
+import com.buyit.ecommerce.util.ResponseAPI;
 import com.buyit.ecommerce.util.ResponseBuilder;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -20,7 +20,7 @@ public class BusinessExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ApiResponse<Void> handleResourceNotFoundException(ResourceNotFoundException ex) {
+    public ResponseAPI<Void> handleResourceNotFoundException(ResourceNotFoundException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put(MESSAGE, ex.getMessage());
         return ResponseBuilder.error("Resource not found.", errors);
@@ -28,7 +28,7 @@ public class BusinessExceptionHandler {
 
     @ExceptionHandler(ResourceExistException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiResponse<Void> handleResourceExistException(ResourceExistException ex) {
+    public ResponseAPI<Void> handleResourceExistException(ResourceExistException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put(MESSAGE, ex.getMessage());
         return ResponseBuilder.error("Resource already exists.", errors);
@@ -36,7 +36,7 @@ public class BusinessExceptionHandler {
 
     @ExceptionHandler(ResourceIllegalState.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse<Void> handleResourceIllegalState(ResourceIllegalState ex) {
+    public ResponseAPI<Void> handleResourceIllegalState(ResourceIllegalState ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put(MESSAGE, ex.getMessage());
         return ResponseBuilder.error("Illegal State.", errors);
@@ -44,7 +44,7 @@ public class BusinessExceptionHandler {
 
     @ExceptionHandler(InsufficientQuantityException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiResponse<Void> handleInsufficientQuantityException(InsufficientQuantityException ex) {
+    public ResponseAPI<Void> handleInsufficientQuantityException(InsufficientQuantityException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put(MESSAGE, ex.getMessage());
 
@@ -53,7 +53,7 @@ public class BusinessExceptionHandler {
 
     @ExceptionHandler(VoucherNotGeneratedException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiResponse<Void> handleVoucherNotGeneratedException(VoucherNotGeneratedException ex) {
+    public ResponseAPI<Void> handleVoucherNotGeneratedException(VoucherNotGeneratedException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put(MESSAGE, ex.getMessage());
 
@@ -62,7 +62,7 @@ public class BusinessExceptionHandler {
 
     @ExceptionHandler(EmailNotSendException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiResponse<Void> handleEmailNotSendException(EmailNotSendException ex) {
+    public ResponseAPI<Void> handleEmailNotSendException(EmailNotSendException ex) {
         Map<String, String> errors = new HashMap<>();
         errors.put(MESSAGE, ex.getMessage());
 

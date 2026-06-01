@@ -13,8 +13,9 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class ApiResponse<T> {
+public class ResponseAPI<T> {
     private Status status;
+
     private String message;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)

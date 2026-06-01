@@ -20,9 +20,9 @@ public class ResponseBuilder {
      * @param pagination Información de paginación (objeto Pagination).
      * @return ApiResponse con datos y paginación.
      */
-    public static <T> ApiResponse<T> successPaginated(String message, T data, Pagination pagination) {
-        ApiResponse<T> apiResponse = new ApiResponse<>();
-        apiResponse.setStatus(ApiResponse.Status.SUCCESS);
+    public static <T> ResponseAPI<T> successPaginated(String message, T data, Pagination pagination) {
+        ResponseAPI<T> apiResponse = new ResponseAPI<>();
+        apiResponse.setStatus(ResponseAPI.Status.SUCCESS);
         apiResponse.setMessage(message);
         apiResponse.setData(data);
         if (pagination != null) {
@@ -39,10 +39,10 @@ public class ResponseBuilder {
      * @param data    Datos exitosos (genérico).
      * @return ApiResponse con datos.
      */
-    public static <T> ApiResponse<T> success(String message, T data) {
+    public static <T> ResponseAPI<T> success(String message, T data) {
 
-        ApiResponse<T> apiResponse = new ApiResponse<>();
-        apiResponse.setStatus(ApiResponse.Status.SUCCESS);
+        ResponseAPI<T> apiResponse = new ResponseAPI<>();
+        apiResponse.setStatus(ResponseAPI.Status.SUCCESS);
         apiResponse.setMessage(message);
         apiResponse.setData(data);
         return apiResponse;
@@ -56,10 +56,10 @@ public class ResponseBuilder {
      * @param errors  Mapa de errores.
      * @return ApiResponse con errores.
      */
-    public static <T> ApiResponse<T> error(String message, Map<String, String> errors) {
+    public static <T> ResponseAPI<T> error(String message, Map<String, String> errors) {
 
-        ApiResponse<T> apiResponse = new ApiResponse<>();
-        apiResponse.setStatus(ApiResponse.Status.ERROR);
+        ResponseAPI<T> apiResponse = new ResponseAPI<>();
+        apiResponse.setStatus(ResponseAPI.Status.ERROR);
         apiResponse.setMessage(message);
         apiResponse.setErrors(errors);
         return apiResponse;
@@ -74,10 +74,10 @@ public class ResponseBuilder {
      * @param errorMessage Mensaje de error.
      * @return ApiResponse con un único error.
      */
-    public static <T> ApiResponse<T> error(String message, String field, String errorMessage) {
+    public static <T> ResponseAPI<T> error(String message, String field, String errorMessage) {
 
-        ApiResponse<T> apiResponse = new ApiResponse<>();
-        apiResponse.setStatus(ApiResponse.Status.ERROR);
+        ResponseAPI<T> apiResponse = new ResponseAPI<>();
+        apiResponse.setStatus(ResponseAPI.Status.ERROR);
         apiResponse.setMessage(message);
         apiResponse.setErrors(Collections.singletonMap(field, errorMessage));
         return apiResponse;

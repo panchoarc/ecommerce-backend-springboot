@@ -6,6 +6,7 @@ import com.buyit.ecommerce.entity.ProductCategory;
 import com.buyit.ecommerce.mapper.ProductMapper;
 import com.buyit.ecommerce.repository.ProductRepository;
 import com.buyit.ecommerce.repository.RecommendationRepository;
+import com.buyit.ecommerce.repository.projection.ProductRecommendationProjection;
 import com.buyit.ecommerce.service.RecommendationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +29,19 @@ public class RecommendationServiceImpl implements RecommendationService {
     @Override
     public List<ProductResponse> getPopularProducts() {
 
-        List<Product> popularProducts = recommendationRepository.getPopularProducts();
-
-        return popularProducts.stream().map(productMapper::toProductResponseDTO).toList();
-
+        PageRequest request = PageRequest.of(0,10);
+        List<ProductRecommendationProjection> popularProducts = recommendationRepository.getPopularProducts(request);
+        return popularProducts.stream()
+                .map(p -> new ProductResponse(
+                        p.getId(),
+                        p.getName(),
+                        p.getDescription(),
+                        p.getPrice(),
+                        p.getStock(),
+                        p.getImg(),
+                        p.getRating()
+                ))
+                .toList();
     }
 
     @Override

@@ -1,7 +1,8 @@
 package com.buyit.ecommerce.repository;
 
 import com.buyit.ecommerce.entity.Product;
-import org.springframework.data.jpa.repository.EntityGraph;
+import com.buyit.ecommerce.repository.projection.ProductRecommendationProjection;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,17 +16,26 @@ public interface RecommendationRepository extends JpaRepository<Product,Long> {
 
 
     @Query("""
-    SELECT p
+    SELECT 
+        p.productId AS id,
+        p.name AS name,
+        p.description AS description,
+        p.price AS price,
+        p.stockQuantity AS stock,
+        (
+            SELECT pi.url 
+            FROM ProductImage pi 
+            WHERE pi.product.productId = p.productId 
+            AND pi.isMain = true
+        ) AS img,
+        COALESCE(AVG(r.rating), 0) AS rating
     FROM Product p
-    WHERE p.productId IN (
-        SELECT oi.product.productId
-        FROM OrderItem oi
-        GROUP BY oi.product.productId
-        ORDER BY COUNT(oi.product.productId) DESC
-    )
+    JOIN OrderItem oi ON oi.product.productId = p.productId
+    LEFT JOIN Review r ON r.product.productId = p.productId
+    GROUP BY p.productId, p.name, p.description, p.price, p.stockQuantity
+    ORDER BY SUM(oi.quantity) DESC
 """)
-    @EntityGraph(attributePaths = {"images", "categories", "reviews"})
-    List<Product> getPopularProducts();
+    List<ProductRecommendationProjection> getPopularProducts(Pageable pageable);
 
 
     @Query("""

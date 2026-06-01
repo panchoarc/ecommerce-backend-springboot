@@ -30,8 +30,7 @@ public class Role {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    // Relación con la tabla intermedia
     @OneToMany(mappedBy = "role", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<RoleEndpoint> roleEndpoints;
-
-
+    private Set<RolePermission> rolePermissions;
 }

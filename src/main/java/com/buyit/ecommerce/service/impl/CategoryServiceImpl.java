@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,10 +36,12 @@ public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
+
+    //@Cacheable(value = "categories", key = "'activeCategories'")
+    @Transactional(readOnly = true)
     @Override
     public List<CategoryMenuResponse> getCategories() {
-        List<Category> categoryPage = categoryRepository.findActiveCategories();
-        return categoryPage.stream().map(categoryMapper::toCategoryMenuResponse).toList();
+        return categoryRepository.findActiveCategoryMenu();
     }
 
     @Override

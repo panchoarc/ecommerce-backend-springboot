@@ -11,7 +11,7 @@ import com.buyit.ecommerce.repository.ProductImageRepository;
 import com.buyit.ecommerce.repository.ProductRepository;
 import com.buyit.ecommerce.service.FileService;
 import com.buyit.ecommerce.service.ProductImageService;
-import com.buyit.ecommerce.util.ApiResponse;
+import com.buyit.ecommerce.util.ResponseAPI;
 import com.buyit.ecommerce.util.ResponseBuilder;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class ProductImageServiceImpl implements ProductImageService {
 
     @Override
     @Transactional
-    public ApiResponse<Void> uploadProductImage(Long productId, List<ImageUploadForm> files) throws IOException {
+    public ResponseAPI<Void> uploadProductImage(Long productId, List<ImageUploadForm> files) throws IOException {
         Product findedProduct = findById(productId);
 
         // Elimina todas las imágenes actuales del producto
@@ -82,7 +82,7 @@ public class ProductImageServiceImpl implements ProductImageService {
 
 
     @Override
-    public ApiResponse<List<ProductImagesResponse>> getProductImages(Long id) {
+    public ResponseAPI<List<ProductImagesResponse>> getProductImages(Long id) {
         Product product = findById(id);
         List<ProductImage> relatedProductImages = productImageRepository.findAllByProduct(product);
         List<ProductImagesResponse> response = relatedProductImages.stream()

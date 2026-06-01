@@ -1,12 +1,15 @@
 package com.buyit.ecommerce.service.impl;
 
 import com.buyit.ecommerce.dto.response.order.OrderDetailsDTO;
-import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
 import com.buyit.ecommerce.service.*;
+import com.google.zxing.WriterException;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 @RequiredArgsConstructor
@@ -25,33 +28,29 @@ public class VoucherServiceImpl implements VoucherService {
     private String frontendUrl;
 
     @Override
-    public byte[] generateVoucher(String keycloakUserId, String orderNumber) {
-        try {
-            // Obtener datos de orden
-            OrderDetailsDTO orderDetails = orderService.getVoucherData(keycloakUserId, orderNumber);
+    public byte[] generateVoucher(String keycloakUserId, String orderNumber) throws IOException, WriterException, MessagingException {
 
-            // Generar QR
-            String qrRedirect = frontendUrl + "/my-orders/" + orderNumber;
-            String qrCode = qrCodeService.generateQRCodeImage(qrRedirect);
+        OrderDetailsDTO orderDetails =
+                orderService.getVoucherData(keycloakUserId, orderNumber);
 
-            // Generar HTML
-            String html = voucherHtmlGeneratorService.generateVoucherHtml(orderDetails, qrCode);
+        String qrRedirect = frontendUrl + "/my-orders/" + orderNumber;
+        String qrCode = qrCodeService.generateQRCodeImage(qrRedirect);
 
-            // Generar PDF
-            byte[] pdfBytes = pdfGeneratorService.generateFromHtml(html);
+        String html = voucherHtmlGeneratorService.generateVoucherHtml(orderDetails, qrCode);
 
-            // Enviar correo
-            emailService.sendOrderDocument(
-                    orderDetails.getUser().getEmail(),
-                    "Tu comprobante de orden #" + orderNumber,
-                    "Adjunto encontrarás tu comprobante de pago. Escanea el QR para ver el detalle de tu orden.",
-                    pdfBytes).join();
+        byte[] pdfBytes = pdfGeneratorService.generateFromHtml(html);
 
-            return pdfBytes;
+        // 🔥 IMPORTANTE: fire-and-forget (NO join)
+        emailService.sendOrderDocument(
+                orderDetails.getUser().getEmail(),
+                "Tu comprobante de orden #" + orderNumber,
+                "Adjunto encontrarás tu comprobante de pago.",
+                pdfBytes
+        ).exceptionally(ex -> {
+            log.error("Error enviando email de voucher", ex);
+            return null;
+        });
 
-        } catch (Exception e) {
-            log.error("Error generando y enviando comprobante", e);
-            throw new ResourceNotFoundException("Error generando y enviando comprobante");
-        }
+        return pdfBytes;
     }
 }

@@ -12,6 +12,7 @@ import com.buyit.ecommerce.exception.custom.DeniedAccessException;
 import com.buyit.ecommerce.exception.custom.ResourceNotFoundException;
 import com.buyit.ecommerce.mapper.OrderMapper;
 import com.buyit.ecommerce.repository.OrderRepository;
+import com.buyit.ecommerce.repository.projection.OrderVoucherProjection;
 import com.buyit.ecommerce.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -54,18 +56,19 @@ public class OrderServiceImpl implements OrderService {
 
         productService.updateStockForOrder(requestedOrder.getCartItems());
         BigDecimal totalOrderAmount = productService.calculateTotalPrice(requestedOrder.getCartItems());
-        String orderNumber = UUID.randomUUID().toString();
+
 
         // 5. Crear el objeto Order
         Order newOrder = new Order();
         newOrder.setUser(dbUser);
-        newOrder.setOrderNumber(orderNumber);
         newOrder.setAddress(userAddress);
         newOrder.setTotalAmount(totalOrderAmount);
         newOrder.setStatus("PENDING");
 
 
         Order savedOrder = orderRepository.save(newOrder);
+        String orderNumber = String.format("%012d", savedOrder.getOrderId());
+        savedOrder.setOrderNumber(orderNumber);
         log.info("Order created: {}", savedOrder);
 
         orderItemService.createOrderItems(requestedOrder.getCartItems(), savedOrder);
@@ -93,84 +96,77 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OrderDetailsResponse getMyOrder(String keycloakUserId, String orderNumber) {
-        User dbUser = userService.getUserByKeycloakId(keycloakUserId);
         Order order = getByOrderNumber(orderNumber);
-        verifyOwnership(dbUser, order);
-
+        if (!verifyOwnership(keycloakUserId, order)) {
+            throw new DeniedAccessException("You are not allowed to delete this review");
+        }
         return orderMapper.toOrderDetailsResponse(order);
-
     }
 
     @Override
     public OrderDetailsDTO getVoucherData(String keycloakUserId, String orderNumber) {
 
-
-        User dbUser = userService.getUserByKeycloakId(keycloakUserId);
-
-        List<Object[]> rows = orderRepository.findOrderDetails(orderNumber, dbUser.getUserId());
+        List<OrderVoucherProjection> rows =
+                orderRepository.findOrderDetails(orderNumber, keycloakUserId);
 
         if (rows.isEmpty()) {
             throw new ResourceNotFoundException("Order not found");
         }
 
-        // Tomamos los campos comunes de la primera fila
-        Object[] first = rows.get(0);
+        OrderVoucherProjection first = rows.get(0);
+
         OrderDetailsDTO dto = new OrderDetailsDTO();
 
-        dto.setOrderNumber((String) first[6]);
-        dto.setTotalAmount((BigDecimal) first[7]);
-        dto.setStatus((String) first[8]);
-        dto.setCreatedAt(((Timestamp) first[9]).toLocalDateTime());
+        // Common order data
+        dto.setOrderNumber(first.getOrderNumber());
+        dto.setTotalAmount(first.getTotalAmount());
+        dto.setStatus(first.getStatus());
+        dto.setCreatedAt(first.getCreatedAt());
 
         // User
         OrderDetailsDTO.UserDTO userDTO = new OrderDetailsDTO.UserDTO();
-        userDTO.setFullName((String) first[0]);
-        userDTO.setEmail((String) first[1]);
+        userDTO.setFullName(first.getFullName());
+        userDTO.setEmail(first.getEmail());
         dto.setUser(userDTO);
 
         // Address
         OrderDetailsDTO.AddressDTO addressDTO = new OrderDetailsDTO.AddressDTO();
-        addressDTO.setStreet((String) first[2]);
-        addressDTO.setCity((String) first[3]);
-        addressDTO.setCountry((String) first[4]);
-        addressDTO.setPostalCode((String) first[5]);
+        addressDTO.setStreet(first.getStreet());
+        addressDTO.setCity(first.getCity());
+        addressDTO.setCountry(first.getCountry());
+        addressDTO.setPostalCode(first.getPostalCode());
         dto.setAddress(addressDTO);
 
         // Items
         List<OrderDetailsDTO.ItemDTO> items = new ArrayList<>();
-        for (Object[] row : rows) {
+
+        for (OrderVoucherProjection row : rows) {
+
             OrderDetailsDTO.ItemDTO item = new OrderDetailsDTO.ItemDTO();
-            item.setOrderItemId(((Number) row[10]).longValue());
-            item.setQuantity(((Number) row[11]).intValue());
-            item.setPriceAtPurchase((BigDecimal) row[12]);
+            item.setOrderItemId(row.getOrderItemId());
+            item.setQuantity(row.getQuantity());
+            item.setPriceAtPurchase(row.getPriceAtPurchase());
 
             OrderDetailsDTO.Product product = new OrderDetailsDTO.Product();
-            product.setName((String) row[13]);
-            product.setDescription((String) row[14]);
+            product.setName(row.getProductName());
+            product.setDescription(row.getProductDescription());
+
             item.setProduct(product);
 
             items.add(item);
         }
+
         dto.setItems(items);
 
         return dto;
     }
-
 
     private Order getByOrderNumber(String orderNumber) {
         return orderRepository.findByOrOrderNumber(orderNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
     }
 
-    private Order getOrder(Long orderId) {
-        return orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
-    }
-
-    public void verifyOwnership(User user, Order order) {
-
-        if (!order.getUser().getUserId().equals(user.getUserId())) {
-            throw new DeniedAccessException("You are not allowed to delete this review");
-        }
+    public boolean verifyOwnership(String keycloakUserId, Order order) {
+        return order.getUser().getKeycloakUserId().equals(keycloakUserId);
     }
 }

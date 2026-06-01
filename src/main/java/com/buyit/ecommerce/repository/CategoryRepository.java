@@ -1,5 +1,6 @@
 package com.buyit.ecommerce.repository;
 
+import com.buyit.ecommerce.dto.response.category.CategoryMenuResponse;
 import com.buyit.ecommerce.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -15,5 +16,10 @@ public interface CategoryRepository extends JpaRepository<Category, Long>, JpaSp
 
     @Query("SELECT c FROM Category c WHERE c.isActive = true")
     List<Category> findActiveCategories();
+
+
+    @Query("SELECT new com.buyit.ecommerce.dto.response.category.CategoryMenuResponse(c.categoryId, c.name) " +
+            "FROM Category c WHERE c.isActive = true")
+    List<CategoryMenuResponse> findActiveCategoryMenu();
     Optional<Category> findByName(String name);
 }

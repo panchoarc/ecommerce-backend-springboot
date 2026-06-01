@@ -7,29 +7,22 @@ import java.util.List;
 
 public interface KeycloakService {
 
+
+    void getUserSessions(String userId);
+
     List<RoleRepresentation> getClientRoles();
-
-    String getClientInternalId();
-
-    String getClientId();
-
-    String getClientSecret();
-
     String createUserInKeycloak(UserRegisterDTO userRegisterDTO);
 
     void assignDefaultRoleToUser(String keycloakUserId, String roleName);
 
     void sendKeycloakVerifyEmail(String keycloakId);
 
-    String getServerToken();
 
     void deleteUserFromKeycloak(String userId);
 
-    String getServerUrl();
 
-    String getAuthUrl();
+    boolean hasOTP(String userId);
+    void startOTPSetup(String userId);
+    void disableOTP(String userId);
 
-    boolean isProviderEnabled(String providerAlias);
-
-    String getRedirectProvider(String provider, String redirectUrl);
 }

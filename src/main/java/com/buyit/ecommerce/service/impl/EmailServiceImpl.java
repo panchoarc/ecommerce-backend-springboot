@@ -1,6 +1,5 @@
 package com.buyit.ecommerce.service.impl;
 
-import com.buyit.ecommerce.exception.custom.EmailNotSendException;
 import com.buyit.ecommerce.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.util.ByteArrayDataSource;
@@ -19,29 +18,37 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
 
-
     private final JavaMailSender mailSender;
 
 
     @Override
     @Async("taskExecutor")
-    public CompletableFuture<Void> sendOrderDocument(String toEmail, String subject, String body, byte[] pdfData) {
+    public CompletableFuture<Void> sendOrderDocument(
+            String toEmail,
+            String subject,
+            String body,
+            byte[] pdfData) {
+
         try {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+
             helper.setTo(toEmail);
             helper.setSubject(subject);
             helper.setText(body, true);
 
-            ByteArrayDataSource pdfBytes = new ByteArrayDataSource(pdfData, MediaType.APPLICATION_PDF_VALUE);
+            ByteArrayDataSource pdfBytes =
+                    new ByteArrayDataSource(pdfData, MediaType.APPLICATION_PDF_VALUE);
+
             helper.addAttachment("ComprobanteOrder.pdf", pdfBytes);
 
             mailSender.send(mimeMessage);
 
             return CompletableFuture.completedFuture(null);
+
         } catch (Exception e) {
-            // Aquí lanzas una excepción custom que será capturada por ControllerAdvice si haces join()
-            return CompletableFuture.failedFuture(new EmailNotSendException("Fallo al enviar el correo"));
+            log.error("Error enviando correo a {}", toEmail, e);
+            return CompletableFuture.failedFuture(e);
         }
     }
 }
