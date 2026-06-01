@@ -59,7 +59,7 @@ public class ProductController {
     @Public
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseAPI<ProductCatResponse> getProduct(@PathVariable("id") Long id) {
+    public ResponseAPI<ProductCatResponse> getProduct(@PathVariable Long id) {
         ProductCatResponse productById = productService.getProductById(id);
         return ResponseBuilder.success("Product found", productById);
     }
@@ -78,7 +78,7 @@ public class ProductController {
     @PreAuthorize("hasAuthority('" + PermissionsConstants.PRODUCTS_UPDATE + "')")
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseAPI<UpdateProductResponse> updateProduct(@PathVariable("id") Long id,
+    public ResponseAPI<UpdateProductResponse> updateProduct(@PathVariable Long id,
                                                             @Valid @RequestBody UpdateProductRequest requestProductDTO) {
         UpdateProductResponse response = productService.updateProduct(id, requestProductDTO);
         return ResponseBuilder.success("Product Updated Successfully", response);
@@ -89,7 +89,7 @@ public class ProductController {
     @PreAuthorize("hasAuthority('" + PermissionsConstants.PRODUCTS_DELETE + "')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteProduct(@PathVariable("id") Long id) {
+    public void deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
     }
 
@@ -98,7 +98,7 @@ public class ProductController {
     @PreAuthorize("hasAuthority('" + PermissionsConstants.PRODUCTS_ATTACH_IMAGES + "')")
     @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA)
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseAPI<Void> addImagesToProduct(@PathVariable("id") Long id,
+    public ResponseAPI<Void> addImagesToProduct(@PathVariable Long id,
                                                 @ModelAttribute ImageUploadWrapper imgWrapper) throws IOException {
 
         return productImageService.uploadProductImage(id, imgWrapper.getImages());
@@ -110,7 +110,7 @@ public class ProductController {
     @Public
     @GetMapping(value = "/{id}/images")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseAPI<List<ProductImagesResponse>> getProductImages(@PathVariable("id") Long id) {
+    public ResponseAPI<List<ProductImagesResponse>> getProductImages(@PathVariable Long id) {
         return productImageService.getProductImages(id);
     }
 
@@ -127,7 +127,7 @@ public class ProductController {
     @Public
     @GetMapping("/{id}/reviews")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseAPI<List<ReviewResponse>> getProductReviews(@PathVariable("id") Long id) {
+    public ResponseAPI<List<ReviewResponse>> getProductReviews(@PathVariable Long id) {
         List<ReviewResponse> productReviews = reviewService.getProductReviews(id);
         return ResponseBuilder.success("Reviews found", productReviews);
     }

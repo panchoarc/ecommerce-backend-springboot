@@ -17,6 +17,7 @@ import com.buyit.ecommerce.service.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -135,6 +136,14 @@ public class OrderServiceImpl implements OrderService {
         dto.setAddress(addressDTO);
 
         // Items
+        List<OrderDetailsDTO.ItemDTO> items = getItemDTOList(rows);
+
+        dto.setItems(items);
+
+        return dto;
+    }
+
+    private static @NonNull List<OrderDetailsDTO.ItemDTO> getItemDTOList(List<OrderVoucherProjection> rows) {
         List<OrderDetailsDTO.ItemDTO> items = new ArrayList<>();
 
         for (OrderVoucherProjection row : rows) {
@@ -152,10 +161,7 @@ public class OrderServiceImpl implements OrderService {
 
             items.add(item);
         }
-
-        dto.setItems(items);
-
-        return dto;
+        return items;
     }
 
     private Order getByOrderNumber(String orderNumber) {

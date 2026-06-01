@@ -49,7 +49,7 @@ public class UserAddressController {
     @PreAuthorize("hasAuthority('" + PermissionsConstants.ADDRESS_GET_MY_ADDRESS + "')")
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseAPI<UserAddressResponse> getAddressById(@PathVariable("id") Long id,
+    public ResponseAPI<UserAddressResponse> getAddressById(@PathVariable Long id,
                                                            @AuthenticationPrincipal Jwt user) {
 
         String keycloakId = userService.extractKeycloakIdFromUser(user);
@@ -74,7 +74,7 @@ public class UserAddressController {
     @PreAuthorize("hasAuthority('" + PermissionsConstants.ADDRESS_UPDATE + "')")
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseAPI<UpdateAddressResponse> updateAddress(@PathVariable("id") Long id,
+    public ResponseAPI<UpdateAddressResponse> updateAddress(@PathVariable Long id,
                                                             @AuthenticationPrincipal Jwt user,
                                                             @Valid @RequestBody UpdateAddressRequest updateAddressRequest) {
 
@@ -87,7 +87,7 @@ public class UserAddressController {
     @PreAuthorize("hasAuthority('" + PermissionsConstants.ADDRESS_DELETE + "')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseAPI<Void> deleteAddress(@PathVariable("id") Long id, @AuthenticationPrincipal Jwt user) {
+    public ResponseAPI<Void> deleteAddress(@PathVariable Long id, @AuthenticationPrincipal Jwt user) {
         String keycloakId = userService.extractKeycloakIdFromUser(user);
         addressService.deleteAddress(keycloakId, id);
         return ResponseBuilder.success("Address deleted successfully", null);

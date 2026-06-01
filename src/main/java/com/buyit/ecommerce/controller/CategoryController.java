@@ -98,7 +98,7 @@ public class CategoryController {
     @PreAuthorize("hasAuthority('" + PermissionsConstants.CATEGORIES_ATTACH_ATTRIBUTES + "')")
     @PostMapping("/{id}/attributes")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseAPI<Void> createProductAttributes(@PathVariable("id") Long id, @Valid @RequestBody List<CreateCategoryAttributesRequest> attributesRequest) {
+    public ResponseAPI<Void> createProductAttributes(@PathVariable Long id, @Valid @RequestBody List<CreateCategoryAttributesRequest> attributesRequest) {
         categoryAttributeService.createCategoryAttributes(id, attributesRequest);
         return ResponseBuilder.success("Attributes added", null);
     }
@@ -106,7 +106,7 @@ public class CategoryController {
     @Public
     @GetMapping("/{id}/attributes")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseAPI<List<CategoryAttributeDTO>> getProductAttributes(@PathVariable("id") Long id) {
+    public ResponseAPI<List<CategoryAttributeDTO>> getProductAttributes(@PathVariable Long id) {
         List<CategoryAttributeDTO> categoryAttributes = categoryAttributeService.getCategoryAttributes(id);
         return ResponseBuilder.success("Attributes retrieved", categoryAttributes);
     }
@@ -115,7 +115,7 @@ public class CategoryController {
     @PreAuthorize("hasAuthority('" + PermissionsConstants.CATEGORIES_UPDATE_CATEGORIES_ATTRIBUTES + "')")
     @PutMapping("/{id}/attributes")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseAPI<Void> getProductAttributes(@PathVariable("id") Long id, @Valid @RequestBody List<CreateCategoryAttributesRequest> attributesRequest) {
+    public ResponseAPI<Void> getProductAttributes(@PathVariable Long id, @Valid @RequestBody List<CreateCategoryAttributesRequest> attributesRequest) {
         categoryAttributeService.updateCategoryAttributes(id, attributesRequest);
         return ResponseBuilder.success("Attributes updated", null);
     }
